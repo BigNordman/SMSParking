@@ -1,14 +1,16 @@
 <resources>
     <string name="app_name">SMS Parking</string>
-    <string name="regnumSummary">Регистрационный номер</string>
+    <string name="mainButtonText">Определить паркинг</string>
     <string name="regnumTitle">Регистрационный номер автомобиля</string>
+    <string name="regnumDefault">X999XX96</string>
+
     <string name="action_settings">Настройки</string>
     <string name="title_activity_settings">Настройки</string>
 
     <!-- Strings related to Settings -->
 
     <!-- Example General settings -->
-    <string name="pref_header_general">General</string>
+    <string name="pref_header_general">Общие</string>
 
     <string name="pref_title_social_recommendations">Enable social recommendations</string>
     <string name="pref_description_social_recommendations">Recommendations for people to contact

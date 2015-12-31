@@ -11,6 +11,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -31,7 +32,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         mainButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.d("LOG", geo.getCoordinates());
+                //Log.d("LOG", geo.getCoordinates(mGoogleApiClient));
+                Toast.makeText(v.getContext(), geo.getCoordinates(mGoogleApiClient), Toast.LENGTH_LONG).show();
+                geo.getPolygonList();
             }
         });
 
@@ -88,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onConnected(Bundle bundle) {
         Log.d("LOG", "onConnected...");
+        mainButton.setEnabled(true);
     }
 
     @Override

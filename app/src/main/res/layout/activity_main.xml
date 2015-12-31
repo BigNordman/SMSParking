@@ -22,5 +22,6 @@
         android:text="@string/mainButtonText"
         android:id="@+id/mainButton"
         android:layout_below="@+id/regnumText"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:enabled="false" />
 </RelativeLayout>

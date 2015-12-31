@@ -63,9 +63,10 @@ public class GeoManager {
                         break;
                     // начало тэга
                     case XmlPullParser.START_TAG:
-                        if (xpp.getName()=="zone") {
+                        if (xpp.getName().equals("zone")) {
                             // Создал пустой массив точек полигона
                             points = new ArrayList<Point>();
+                            Log.d("LOG", "START_ZONE");
                         }
                         Log.d("LOG", "START_TAG: name = " + xpp.getName()
                                 + ", depth = " + xpp.getDepth() + ", attrCount = "
@@ -80,8 +81,9 @@ public class GeoManager {
                         break;
                     // конец тэга
                     case XmlPullParser.END_TAG:
-                        if (xpp.getName()=="zone") {
+                        if (xpp.getName().equals("zone")) {
                             //TODO добавить в result объект типа polygon
+                            Log.d("LOG", "END_ZONE");
                         }
 
                         Log.d("LOG", "END_TAG: name = " + xpp.getName());

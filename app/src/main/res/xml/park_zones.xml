@@ -8,11 +8,11 @@
         <point lat="56.827913" lon="60.609709"/>
     </zone>
     <zone zone_number="102" zone_desc="зона 102">
-        <point lat="56.899710" lon="60.645796"/>
-        <point lat="56.899822" lon="60.646150"/>
-        <point lat="56.897457" lon="60.649969"/>
-        <point lat="56.897167" lon="60.648349"/>
-        <point lat="56.899710" lon="60.645796"/>
+        <point lat="56.899728" lon="60.640271"/>
+        <point lat="56.901679" lon="60.646612"/>
+        <point lat="56.896799" lon="60.651472"/>
+        <point lat="56.894789" lon="60.644477"/>
+        <point lat="56.899728" lon="60.640271"/>
     </zone>
 </data>
 

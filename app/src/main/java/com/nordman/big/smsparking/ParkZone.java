@@ -10,12 +10,14 @@ public class ParkZone {
     private String zoneDesc;
     private Polygon zonePolygon;
 
-    public Polygon getZonePolygon() {
-        return zonePolygon;
+    public ParkZone(Polygon zonePolygon, Integer zoneNumber, String zoneDesc) {
+        this.zonePolygon = zonePolygon;
+        this.zoneNumber = zoneNumber;
+        this.zoneDesc = zoneDesc;
     }
 
-    public void setZonePolygon(Polygon zonePolygon) {
-        this.zonePolygon = zonePolygon;
+    public Polygon getZonePolygon() {
+        return zonePolygon;
     }
 
     public String getZoneDesc() {
@@ -23,17 +25,10 @@ public class ParkZone {
         return zoneDesc;
     }
 
-    public void setZoneDesc(String zoneDesc) {
-        this.zoneDesc = zoneDesc;
-    }
 
     public Integer getZoneNumber() {
 
         return zoneNumber;
-    }
-
-    public void setZoneNumber(Integer zoneNumber) {
-        this.zoneNumber = zoneNumber;
     }
 
 }

@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data xmlns:android="http://schemas.android.com/apk/res/android">
-    <zone zone_number="101">
+    <zone zone_number="101" zone_desc="зона 101">
         <point lat="56.827913" lon="60.609709"/>
         <point lat="56.820904" lon="60.612048"/>
         <point lat="56.821291" lon="60.617154"/>
         <point lat="56.828454" lon="60.615180"/>
+        <point lat="56.827913" lon="60.609709"/>
     </zone>
-    <zone zone_number="102">
+    <zone zone_number="102" zone_desc="зона 102">
         <point lat="56.899710" lon="60.645796"/>
         <point lat="56.899822" lon="60.646150"/>
         <point lat="56.897457" lon="60.649969"/>
         <point lat="56.897167" lon="60.648349"/>
+        <point lat="56.899710" lon="60.645796"/>
     </zone>
 </data>
 

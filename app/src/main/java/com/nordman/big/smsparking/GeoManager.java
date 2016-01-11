@@ -7,12 +7,12 @@ package com.nordman.big.smsparking;
 
 import android.content.Context;
 import android.location.Location;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
+import com.vividsolutions.jts.awt.PointShapeFactory;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -39,7 +39,7 @@ public class GeoManager {
         return this.getCurrentPoint(mGoogleApiClient).toString();
     }
 
-    public Point getCurrentPoint(GoogleApiClient mGoogleApiClient) {
+    private Point getCurrentPoint(GoogleApiClient mGoogleApiClient) {
         Point result = null;
         Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         if (mLastLocation != null) {
@@ -48,49 +48,51 @@ public class GeoManager {
         return result;
     }
 
-    public ArrayList<Polygon> getPolygonList(){
-        ArrayList<Polygon> result = new ArrayList<Polygon>();
-        ArrayList<Point> points;
+    private ArrayList<ParkZone> getParkZoneList(){
+        ArrayList<ParkZone> result = new ArrayList<ParkZone>();
+        ArrayList<Coordinate> coords = null;
+        Polygon polygon = null;
+        Integer zoneNumber = null;
+        String zoneDesc = null;
 
         // парсим xml с координатами полигонов
         try {
             XmlPullParser xpp = context.getResources().getXml(R.xml.park_zones);
             while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
                 switch (xpp.getEventType()) {
-                    // начало документа
-                    case XmlPullParser.START_DOCUMENT:
-                        Log.d("LOG", "START_DOCUMENT");
-                        break;
                     // начало тэга
                     case XmlPullParser.START_TAG:
-                        if (xpp.getName().equals("zone")) {
-                            // Создал пустой массив точек полигона
-                            points = new ArrayList<Point>();
-                            Log.d("LOG", "START_ZONE");
+                        switch (xpp.getName()) {
+                            case "zone":
+                                // массив точек полигона. Пустой
+                                coords = new ArrayList<Coordinate>();
+                                zoneNumber = Integer.parseInt(xpp.getAttributeValue(null,"zone_number")) ;
+                                zoneDesc = xpp.getAttributeValue(null,"zone_desc");
+                                break;
+                            case "point":
+                                // точка полигона
+                                Double lat = Double.parseDouble(xpp.getAttributeValue(0));
+                                Double lon = Double.parseDouble(xpp.getAttributeValue(1));
+                                if (coords!=null) {
+                                    coords.add(new Coordinate(lat, lon));
+                                }
+                                break;
+                            default:
+                                break;
                         }
-                        Log.d("LOG", "START_TAG: name = " + xpp.getName()
-                                + ", depth = " + xpp.getDepth() + ", attrCount = "
-                                + xpp.getAttributeCount());
-                        String tmp = "";
-                        for (int i = 0; i < xpp.getAttributeCount(); i++) {
-                            tmp = tmp + xpp.getAttributeName(i) + " = "
-                                    + xpp.getAttributeValue(i) + ", ";
-                        }
-                        if (!TextUtils.isEmpty(tmp))
-                            Log.d("LOG", "Attributes: " + tmp);
+
                         break;
                     // конец тэга
                     case XmlPullParser.END_TAG:
                         if (xpp.getName().equals("zone")) {
-                            //TODO добавить в result объект типа polygon
-                            Log.d("LOG", "END_ZONE");
+                            // Зона определена - создаем объект ParkZone и зохраняем в результате
+                            if (coords!=null) {
+                                polygon = factory.createPolygon(coords.toArray(new Coordinate[coords.size()]));
+                                Log.d("LOG", polygon.toString());
+                                ParkZone zone = new ParkZone(polygon,zoneNumber,zoneDesc);
+                                result.add(zone);
+                            }
                         }
-
-                        Log.d("LOG", "END_TAG: name = " + xpp.getName());
-                        break;
-                    // содержимое тэга
-                    case XmlPullParser.TEXT:
-                        Log.d("LOG", "text = " + xpp.getText());
                         break;
 
                     default:
@@ -103,5 +105,18 @@ public class GeoManager {
         }
 
         return result;
+    }
+
+    public String getParkZoneNumber(GoogleApiClient mGoogleApiClient){
+        ArrayList<ParkZone> zones = this.getParkZoneList();
+        Point currentPoint = this.getCurrentPoint(mGoogleApiClient);
+
+        for(ParkZone zone : zones){
+            if (zone.getZonePolygon().contains(currentPoint)){
+                return zone.getZoneNumber().toString();
+            }
+        }
+
+        return "___";
     }
 }

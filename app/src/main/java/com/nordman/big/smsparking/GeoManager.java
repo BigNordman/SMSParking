@@ -48,7 +48,7 @@ public class GeoManager {
         return result;
     }
 
-    private ArrayList<ParkZone> getParkZoneList(){
+    public ArrayList<ParkZone> getParkZoneList(){
         ArrayList<ParkZone> result = new ArrayList<ParkZone>();
         ArrayList<Coordinate> coords = null;
         Polygon polygon = null;
@@ -107,16 +107,30 @@ public class GeoManager {
         return result;
     }
 
-    public String getParkZoneNumber(GoogleApiClient mGoogleApiClient){
+
+    public ParkZone getParkZone(GoogleApiClient mGoogleApiClient){
         ArrayList<ParkZone> zones = this.getParkZoneList();
         Point currentPoint = this.getCurrentPoint(mGoogleApiClient);
 
         for(ParkZone zone : zones){
             if (zone.getZonePolygon().contains(currentPoint)){
-                return zone.getZoneNumber().toString();
+                return zone;
             }
         }
 
-        return "___";
+        return null;
     }
+
+    public ParkZone getParkZone(int zoneNumber){
+        ArrayList<ParkZone> zones = this.getParkZoneList();
+
+        for(ParkZone zone : zones){
+            if (zone.getZoneNumber()==zoneNumber){
+                return zone;
+            }
+        }
+
+        return null;
+    }
+
 }

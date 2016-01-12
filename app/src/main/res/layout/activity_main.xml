@@ -16,12 +16,38 @@
         android:layout_centerHorizontal="true"
         android:textSize="@dimen/text_size_large"/>
 
-    <Button
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/smsText"
+        android:id="@+id/linearLayout">
+
+        <Button
+            android:text="@string/mainButtonText"
+            android:id="@+id/getZoneButton"
+            android:enabled="false"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="getZoneButtonOnClick"/>
+
+        <Button
+            android:text="Ввести вручную"
+            android:id="@+id/setZoneButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="setZoneButtonOnClick"/>
+    </LinearLayout>
+
+    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/mainButtonText"
-        android:id="@+id/mainButton"
-        android:layout_below="@+id/smsText"
-        android:layout_centerHorizontal="true"
-        android:enabled="false" />
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/zoneDesc"
+        android:layout_below="@+id/linearLayout"
+        android:layout_centerHorizontal="true" />
+
 </RelativeLayout>

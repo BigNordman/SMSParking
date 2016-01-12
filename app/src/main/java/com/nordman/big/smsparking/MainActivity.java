@@ -2,6 +2,7 @@ package com.nordman.big.smsparking;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.location.Location;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
@@ -11,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.PopupMenu;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,37 +22,28 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+import java.util.ArrayList;
+
+public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, PopupMenu.OnMenuItemClickListener {
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 5;
 
-    TextView smsText;
-    Button mainButton;
+    Button getZoneButton;
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
     GeoManager geo = new GeoManager(this);
     String sms = null;
     String regNum = "________";
-    String parkZoneNumber = "___";
+    ParkZone currentZone = null;
     String hours = "_";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        smsText = (TextView) this.findViewById(R.id.smsText);
-        mainButton = (Button) this.findViewById(R.id.mainButton);
-        mainButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Log.d("LOG", geo.getCoordinates(mGoogleApiClient));
-                Toast.makeText(v.getContext(), geo.getCoordinates(mGoogleApiClient), Toast.LENGTH_LONG).show();
 
-                parkZoneNumber = geo.getParkZoneNumber(mGoogleApiClient);
-                sms = "p66*" + parkZoneNumber + "*" + regNum + "*" + hours;
-                smsText.setText(sms);
-            }
-        });
+        // обработчик клика "Определить паркинг"
+        getZoneButton = (Button) this.findViewById(R.id.getZoneButton);
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -79,12 +72,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onResume();
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         regNum = prefs.getString("regnum", "________");
-
-        sms = "p66*" + parkZoneNumber + "*" + regNum + "*" + hours;
-        smsText.setText(sms);
-        /*
-        Log.d("LOG", prefs.getString("regnum", "не установлено"));
-        */
+        updateSms();
     }
 
     @Override
@@ -111,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void onConnected(Bundle bundle) {
         Log.d("LOG", "onConnected...");
         createLocationRequest();
-        mainButton.setEnabled(true);
+        getZoneButton.setEnabled(true);
     }
 
     @Override
@@ -127,7 +115,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public void onLocationChanged(Location location) {
         Log.d("LOG", location.toString());
-        //Toast.makeText(this, location.toString() + "", Toast.LENGTH_SHORT).show();
     }
 
     protected void createLocationRequest() {
@@ -142,4 +129,56 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
+    private void updateSms(){
+        sms = "p66*";
+        TextView zoneDesc = (TextView) this.findViewById(R.id.zoneDesc);
+
+        if (currentZone==null) {
+            sms += "___*";
+            zoneDesc.setText("Паркинг не определен");
+            zoneDesc.setTextColor(Color.RED);
+        } else {
+            sms += currentZone.getZoneNumber().toString() + "*";
+            zoneDesc.setText(currentZone.getZoneDesc());
+            zoneDesc.setTextColor(Color.BLACK);
+        }
+        sms += regNum + "*" + hours;
+
+        ((TextView) this.findViewById(R.id.smsText)).setText(sms);
+    }
+
+    public void getZoneButtonOnClick(View v) {
+        Log.d("LOG", geo.getCoordinates(mGoogleApiClient));
+        Toast.makeText(v.getContext(), geo.getCoordinates(mGoogleApiClient), Toast.LENGTH_LONG).show();
+
+        currentZone = geo.getParkZone(mGoogleApiClient);
+        updateSms();
+    }
+
+    public void setZoneButtonOnClick(View v) {
+        PopupMenu popup = new PopupMenu(this,v);
+        Menu mnu = popup.getMenu();
+
+        // заполняем меню из xml с парковочными зонами
+        ArrayList<ParkZone> zones = geo.getParkZoneList();
+
+        for(ParkZone zone : zones){
+            mnu.add(0,zone.getZoneNumber(),zone.getZoneNumber(),zone.getZoneNumber().toString());
+        }
+
+        popup.setOnMenuItemClickListener(this);
+        popup.getMenuInflater().inflate(R.menu.menu_zone, mnu);
+
+        popup.show();
+    }
+
+
+    @Override
+    public boolean onMenuItemClick(MenuItem item) {
+        //Log.d("LOG", "MenuItemId = " + String.valueOf(item.getItemId()));
+        currentZone = geo.getParkZone(item.getItemId());
+        updateSms();
+
+        return true;
+    }
 }

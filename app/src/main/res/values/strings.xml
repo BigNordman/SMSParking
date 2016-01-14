@@ -1,13 +1,18 @@
 <resources>
     <string name="app_name">SMS Parking</string>
-    <string name="mainButtonText">Определить паркинг</string>
+    <string name="getZoneButtonText">Определить паркинг</string>
+    <string name="setZoneButtonText">Ввести вручную</string>
     <string name="regnumTitle">Регистрационный номер автомобиля</string>
     <string name="regnumDefault">X999XX96</string>
+    <string name="smsNumber">+79126549699</string>
 
-    <string name="action_settings">Настройки</string>
-    <string name="title_activity_settings">Настройки</string>
+    <string name="oneHourButtonText">1 час</string>
+    <string name="twoHourButtonText">2 часа</string>
+    <string name="threeHourButtonText">3 часа</string>
 
     <!-- Strings related to Settings -->
+    <string name="action_settings">Настройки</string>
+    <string name="title_activity_settings">Настройки</string>
 
     <!-- Example General settings -->
     <string name="pref_header_general">Общие</string>
@@ -64,4 +69,5 @@
     <string name="pref_ringtone_silent">Silent</string>
 
     <string name="pref_title_vibrate">Vibrate</string>
+    <string name="payButtonText">Оплатить с помощью СМС</string>
 </resources>

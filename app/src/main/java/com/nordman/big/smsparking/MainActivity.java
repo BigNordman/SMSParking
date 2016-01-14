@@ -1,10 +1,14 @@
 package com.nordman.big.smsparking;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.Uri;
 import android.preference.PreferenceManager;
+import android.provider.Telephony;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,7 +26,10 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, PopupMenu.OnMenuItemClickListener {
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
@@ -35,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     String sms = null;
     String regNum = "________";
     ParkZone currentZone = null;
-    String hours = "_";
+    String hours = "1";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void updateSms(){
+        // формируем строку sms
         sms = "p66*";
         TextView zoneDesc = (TextView) this.findViewById(R.id.zoneDesc);
 
@@ -144,7 +152,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
         sms += regNum + "*" + hours;
 
+        // выводим sms на экран
         ((TextView) this.findViewById(R.id.smsText)).setText(sms);
+
+        // выводим часы
+        String hourDesc;
+        if (hours.equals("1")) hourDesc = hours + " час";
+        else hourDesc = hours + " часа";
+        ((TextView) this.findViewById(R.id.hourDesc)).setText(hourDesc);
+
+        // энаблим/дизаблим кнопку "оплатить"
+        if (!regNum.equals("________") & currentZone!=null) this.findViewById(R.id.payButton).setEnabled(true);
+        else this.findViewById(R.id.payButton).setEnabled(false);
     }
 
     public void getZoneButtonOnClick(View v) {
@@ -180,5 +199,73 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         updateSms();
 
         return true;
+    }
+
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putString("sms", sms);
+        if (currentZone!=null) outState.putInt("currentZoneNumber", currentZone.getZoneNumber());
+        outState.putString("hours", hours);
+
+        Log.d("LOG", "onSaveInstanceState");
+    }
+
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        sms = savedInstanceState.getString("sms");
+        currentZone = geo.getParkZone(savedInstanceState.getInt("currentZoneNumber"));
+        hours = savedInstanceState.getString("hours");
+
+        Log.d("LOG", "onRestoreInstanceState");
+    }
+
+    public void oneHourButtonOnClick(View view) {
+        hours = "1";
+        updateSms();
+    }
+
+    public void twoHourButtonOnClick(View view) {
+        hours = "2";
+        updateSms();
+    }
+
+    public void threeHourButtonOnClick(View view) {
+        hours = "3";
+        updateSms();
+    }
+
+    public void payButtonOnClick(View view) {
+        Uri uri = Uri.parse("smsto:" + getResources().getString(R.string.smsNumber));
+        Intent it = new Intent(Intent.ACTION_SENDTO, uri);
+        it.putExtra("sms_body", sms);
+        startActivity(it);
+    }
+
+    public void checkSms(View view) {
+        ContentResolver cr = this.getContentResolver();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+        Cursor c = cr.query(Telephony.Sms.Inbox.CONTENT_URI, // Official CONTENT_URI from docs
+                new String[] { Telephony.Sms.Inbox.DATE, Telephony.Sms.Inbox.BODY }, // Select body text
+                null,
+                null,
+                Telephony.Sms.Inbox.DEFAULT_SORT_ORDER); // Default sort order
+
+        assert c != null;
+        int totalSMS = c.getCount();
+
+        if (c.moveToFirst()) {
+            for (int i = 0; i < totalSMS; i++) {
+                Date dt = new Date(Long.parseLong(c.getString(0)));
+                Log.d("LOG", "sms date= " + dateFormat.format(dt));
+                Log.d("LOG", "sms text= " + c.getString(1));
+                c.moveToNext();
+            }
+        } else {
+            throw new RuntimeException("You have no SMS in Inbox");
+        }
+        c.close();
     }
 }

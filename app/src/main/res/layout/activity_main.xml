@@ -21,10 +21,10 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:layout_below="@+id/smsText"
-        android:id="@+id/linearLayout">
+        android:id="@+id/zoneLinearLayout">
 
         <Button
-            android:text="@string/mainButtonText"
+            android:text="@string/getZoneButtonText"
             android:id="@+id/getZoneButton"
             android:enabled="false"
             android:layout_width="wrap_content"
@@ -33,7 +33,7 @@
             android:onClick="getZoneButtonOnClick"/>
 
         <Button
-            android:text="Ввести вручную"
+            android:text="@string/setZoneButtonText"
             android:id="@+id/setZoneButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -47,7 +47,65 @@
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="Medium Text"
         android:id="@+id/zoneDesc"
-        android:layout_below="@+id/linearLayout"
+        android:layout_below="@+id/zoneLinearLayout"
         android:layout_centerHorizontal="true" />
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/zoneDesc"
+        android:id="@+id/hourLinearLayout">
+        <Button
+            android:text="@string/oneHourButtonText"
+            android:id="@+id/oneHourButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="oneHourButtonOnClick"/>
+        <Button
+            android:text="@string/twoHourButtonText"
+            android:id="@+id/twoHourButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="twoHourButtonOnClick"/>
+        <Button
+            android:text="@string/threeHourButtonText"
+            android:id="@+id/threeHourButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="threeHourButtonOnClick"/>
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:text="Medium Text"
+        android:id="@+id/hourDesc"
+        android:layout_below="@+id/hourLinearLayout"
+        android:layout_centerHorizontal="true"
+        android:textColor="@android:color/black" />
+    <Button
+        android:text="@string/payButtonText"
+        android:id="@+id/payButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/hourDesc"
+        android:enabled="false"
+        android:onClick="payButtonOnClick"
+        android:layout_alignRight="@+id/hourLinearLayout"
+        android:layout_alignEnd="@+id/hourLinearLayout" />
+
+    <ImageButton
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:id="@+id/imageButton"
+        android:layout_below="@+id/payButton"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/ic_sms_black"
+        android:onClick="checkSms" />
 
 </RelativeLayout>

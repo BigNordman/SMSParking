@@ -1,14 +1,13 @@
 package com.nordman.big.smsparking;
 
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
-import android.provider.Telephony;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.PopupMenu;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,10 +26,10 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, PopupMenu.OnMenuItemClickListener {
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
@@ -39,10 +39,17 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
     GeoManager geo = new GeoManager(this);
+    SmsManager smsMgr = new SmsManager(this);
+    Timer timer = null;
+    ProgressBar progressBar = null;
+
     String sms = null;
     String regNum = "________";
     ParkZone currentZone = null;
     String hours = "1";
+
+    boolean waitForSms = false;
+    Date sendDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,12 +69,14 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
     @Override
     protected void onStart() {
+        Log.d("LOG", "onStart...");
         mGoogleApiClient.connect();
         super.onStart();
     }
 
     @Override
     protected void onStop() {
+        Log.d("LOG", "onStop...");
         super.onStop();
         if(mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
@@ -76,10 +85,22 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     protected void onResume() {
+        Log.d("LOG", "onResume...");
         super.onResume();
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         regNum = prefs.getString("regnum", "________");
         updateSms();
+
+        // если произошло возвращение из смс-приложения, то проверим, была ли отослана смс
+        if (waitForSms){
+            Log.d("LOG", "check for outgoing sms...");
+            waitForSms=false;
+            if(smsMgr.IsSent(sendDate,getResources().getString(R.string.smsNumber))) {
+                Log.d("LOG", "sms was sent...");
+            } else {
+                Log.d("LOG", "sms wasn't sent...");
+            }
+        }
     }
 
     @Override
@@ -121,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.d("LOG", location.toString());
+        //Log.d("LOG", location.toString());
     }
 
     protected void createLocationRequest() {
@@ -241,31 +262,39 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Intent it = new Intent(Intent.ACTION_SENDTO, uri);
         it.putExtra("sms_body", sms);
         startActivity(it);
+        waitForSms = true;
+        sendDate = new Date();
     }
+
+    final Handler h = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            if (progressBar!=null) progressBar.setVisibility(View.INVISIBLE);
+            return false;
+        }
+    });
 
     public void checkSms(View view) {
-        ContentResolver cr = this.getContentResolver();
-        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        if (timer==null){
+            progressBar = (ProgressBar) findViewById(R.id.progressBar);
+            progressBar.setVisibility(View.VISIBLE);
 
-        Cursor c = cr.query(Telephony.Sms.Inbox.CONTENT_URI, // Official CONTENT_URI from docs
-                new String[] { Telephony.Sms.Inbox.DATE, Telephony.Sms.Inbox.BODY }, // Select body text
-                null,
-                null,
-                Telephony.Sms.Inbox.DEFAULT_SORT_ORDER); // Default sort order
-
-        assert c != null;
-        int totalSMS = c.getCount();
-
-        if (c.moveToFirst()) {
-            for (int i = 0; i < totalSMS; i++) {
-                Date dt = new Date(Long.parseLong(c.getString(0)));
-                Log.d("LOG", "sms date= " + dateFormat.format(dt));
-                Log.d("LOG", "sms text= " + c.getString(1));
-                c.moveToNext();
-            }
-        } else {
-            throw new RuntimeException("You have no SMS in Inbox");
+            timer = new Timer();
+            timer.schedule(new UpdateTimeTask(), 0, 5000); //тикаем каждые 5 секунд
         }
-        c.close();
     }
+
+    private class UpdateTimeTask extends TimerTask {
+        int tickCount = 0;
+        public void run() {
+            tickCount++;
+            Log.d("LOG", "timer tick! " + String.valueOf(tickCount) );
+            if(tickCount>=3) {
+                timer.cancel();
+                timer = null;
+                h.sendEmptyMessage(0);
+            }
+        }
+    }
+
 }

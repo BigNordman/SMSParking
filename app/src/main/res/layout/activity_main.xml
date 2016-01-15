@@ -100,12 +100,20 @@
         android:layout_alignEnd="@+id/hourLinearLayout" />
 
     <ImageButton
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:id="@+id/imageButton"
-        android:layout_below="@+id/payButton"
-        android:layout_centerHorizontal="true"
         android:background="@drawable/ic_sms_black"
-        android:onClick="checkSms" />
+        android:onClick="checkSms"
+        android:layout_below="@+id/payButton"
+        android:layout_alignParentStart="true" />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:layout_alignBottom="@+id/imageButton"
+        android:layout_toEndOf="@+id/imageButton"
+        android:visibility="invisible" />
 
 </RelativeLayout>

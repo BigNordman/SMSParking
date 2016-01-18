@@ -4,7 +4,8 @@
     <string name="setZoneButtonText">Ввести вручную</string>
     <string name="regnumTitle">Регистрационный номер автомобиля</string>
     <string name="regnumDefault">X999XX96</string>
-    <string name="smsNumber">+79126549699</string>
+    <!--<string name="smsNumber">+79126549699</string>-->
+    <string name="smsNumber">3116</string>
 
     <string name="oneHourButtonText">1 час</string>
     <string name="twoHourButtonText">2 часа</string>
@@ -70,4 +71,8 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="payButtonText">Оплатить с помощью СМС</string>
+    <string name="sendSmsFailed">Не обнаружено исходящее СМС</string>
+    <string name="sendSmsWaiting">Ожидаем ответного сообщения</string>
+    <string name="smsNumberBack">6996</string>
+    <string name="incomingSmsFailed">Не обнаружено входящее смс</string>
 </resources>

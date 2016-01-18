@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <data xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
     <zone zone_number="101" zone_desc="зона 101">
         <point lat="56.827913" lon="60.609709"/>
         <point lat="56.820904" lon="60.612048"/>
@@ -14,7 +15,80 @@
         <point lat="56.894789" lon="60.644477"/>
         <point lat="56.899728" lon="60.640271"/>
     </zone>
+    -->
+
+    <zone zone_number="201" zone_desc="зона 201">
+        <point lat="56.832004" lon="60.582730"/>
+        <point lat="56.836125" lon="60.581904"/>
+        <point lat="56.837539" lon="60.595808"/>
+        <point lat="56.833848" lon="60.597321"/>
+        <point lat="56.832004" lon="60.582730"/>
+    </zone>
+    <zone zone_number="202" zone_desc="зона 202">
+        <point lat="56.838238" lon="60.596950"/>
+        <point lat="56.838543" lon="60.600040"/>
+        <point lat="56.834006" lon="60.601510"/>
+        <point lat="56.833677" lon="60.598325"/>
+        <point lat="56.838238" lon="60.596950"/>
+    </zone>
+    <zone zone_number="203" zone_desc="зона 203">
+        <point lat="56.832738" lon="60.588395"/>
+        <point lat="56.829480" lon="60.590101"/>
+        <point lat="56.830062" lon="60.595122"/>
+        <point lat="56.833425" lon="60.593545"/>
+        <point lat="56.832738" lon="60.588395"/>
+    </zone>
+    <zone zone_number="204" zone_desc="зона 204">
+        <point lat="56.829603" lon="60.589714"/>
+        <point lat="56.829821" lon="60.591828"/>
+        <point lat="56.825612" lon="60.593866"/>
+        <point lat="56.825459" lon="60.590927"/>
+        <point lat="56.829603" lon="60.589714"/>
+    </zone>
+    <zone zone_number="205" zone_desc="зона 205">
+        <point lat="56.829926" lon="60.592139"/>
+        <point lat="56.830220" lon="60.595218"/>
+        <point lat="56.824150" lon="60.597675"/>
+        <point lat="56.823774" lon="60.594467"/>
+        <point lat="56.829926" lon="60.592139"/>
+    </zone>
+    <zone zone_number="206" zone_desc="зона 206">
+        <point lat="56.839012" lon="60.606307"/>
+        <point lat="56.839370" lon="60.609955"/>
+        <point lat="56.834957" lon="60.611565"/>
+        <point lat="56.834446" lon="60.608389"/>
+        <point lat="56.839012" lon="60.606307"/>
+    </zone>
+    <zone zone_number="207" zone_desc="зона 207">
+        <point lat="56.835127" lon="60.610631"/>
+        <point lat="56.835426" lon="60.612691"/>
+        <point lat="56.828417" lon="60.615684"/>
+        <point lat="56.828117" lon="60.612819"/>
+        <point lat="56.835127" lon="60.610631"/>
+    </zone>
+    <zone zone_number="208" zone_desc="зона 208">
+        <point lat="56.833459" lon="60.613495"/>
+        <point lat="56.833793" lon="60.615941"/>
+        <point lat="56.828498" lon="60.618366"/>
+        <point lat="56.823884" lon="60.619385"/>
+        <point lat="56.823479" lon="60.616649"/>
+        <point lat="56.828228" lon="60.615759"/>
+        <point lat="56.833459" lon="60.613495"/>
+    </zone>
+    <zone zone_number="209" zone_desc="зона 209">
+        <point lat="56.834679" lon="60.614182"/>
+        <point lat="56.839444" lon="60.611950"/>
+        <point lat="56.840236" lon="60.618731"/>
+        <point lat="56.836651" lon="60.620394"/>
+        <point lat="56.836398" lon="60.621488"/>
+        <point lat="56.835706" lon="60.621606"/>
+        <point lat="56.834679" lon="60.614182"/>
+    </zone>
+    <zone zone_number="210" zone_desc="зона 210">
+        <point lat="56.840066" lon="60.619321"/>
+        <point lat="56.840401" lon="60.621799"/>
+        <point lat="56.836122" lon="60.623387"/>
+        <point lat="56.835993" lon="60.621252"/>
+        <point lat="56.840066" lon="60.619321"/>
+    </zone>
 </data>
-
-
-

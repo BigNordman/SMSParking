@@ -4,7 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
 import android.provider.Telephony;
-import android.util.Log;
+
 import java.util.Date;
 
 /**
@@ -47,5 +47,33 @@ public class SmsManager {
         return result;
     }
 
+    public String GetIncomingSms(Date dt, String fromWhom){
+        String result = null;
+
+        ContentResolver cr = context.getContentResolver();
+
+        Cursor c = cr.query(Telephony.Sms.Inbox.CONTENT_URI, // Official CONTENT_URI from docs
+                new String[] { Telephony.Sms.Inbox.DATE, Telephony.Sms.Inbox.ADDRESS, Telephony.Sms.Inbox.BODY }, // Select body text
+                Telephony.Sms.Inbox.ADDRESS + " = '" + fromWhom + "'",
+                null,
+                Telephony.Sms.Inbox.DEFAULT_SORT_ORDER); // Default sort order
+
+        assert c != null;
+        int totalSMS = c.getCount();
+
+        if (c.moveToFirst()) {
+            for (int i = 0; i < totalSMS; i++) {
+                if (Long.parseLong(c.getString(0)) > dt.getTime()) {
+                    result=c.getString(2);
+                    break;
+                }
+                c.moveToNext();
+            }
+        }
+
+        c.close();
+
+        return result;
+    }
 
 }

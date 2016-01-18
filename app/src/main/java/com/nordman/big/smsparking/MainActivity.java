@@ -95,10 +95,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (waitForSms){
             Log.d("LOG", "check for outgoing sms...");
             waitForSms=false;
+            TextView sendMessageText = (TextView) this.findViewById(R.id.sendMessage);
             if(smsMgr.IsSent(sendDate,getResources().getString(R.string.smsNumber))) {
                 Log.d("LOG", "sms was sent...");
+                sendMessageText.setText(getResources().getString(R.string.sendSmsWaiting));
+                sendMessageText.setTextColor(Color.BLACK);
+                checkSms();
             } else {
                 Log.d("LOG", "sms wasn't sent...");
+                sendMessageText.setText(getResources().getString(R.string.sendSmsFailed));
+                sendMessageText.setTextColor(Color.RED);
             }
         }
     }
@@ -269,12 +275,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     final Handler h = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
+            String aResponse = msg.getData().getString("message");
+            if ((null != aResponse)){
+                ((TextView) findViewById(R.id.sendMessage)).setText(aResponse);
+            }
             if (progressBar!=null) progressBar.setVisibility(View.INVISIBLE);
             return false;
         }
     });
 
-    public void checkSms(View view) {
+    public void checkSms() {
         if (timer==null){
             progressBar = (ProgressBar) findViewById(R.id.progressBar);
             progressBar.setVisibility(View.VISIBLE);
@@ -286,13 +296,32 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     private class UpdateTimeTask extends TimerTask {
         int tickCount = 0;
+        String smsText;
+        Message msgObj;
+        Bundle b;
         public void run() {
             tickCount++;
             Log.d("LOG", "timer tick! " + String.valueOf(tickCount) );
-            if(tickCount>=3) {
+            smsText = smsMgr.GetIncomingSms(sendDate,getResources().getString(R.string.smsNumberBack));
+            if (smsText!=null){
                 timer.cancel();
                 timer = null;
-                h.sendEmptyMessage(0);
+
+                msgObj = h.obtainMessage();
+                b = new Bundle();
+                b.putString("message", smsText);
+                msgObj.setData(b);
+                h.sendMessage(msgObj);
+            }
+            if(tickCount>=6) {
+                timer.cancel();
+                timer = null;
+
+                msgObj = h.obtainMessage();
+                b = new Bundle();
+                b.putString("message", getResources().getString(R.string.incomingSmsFailed));
+                msgObj.setData(b);
+                h.sendMessage(msgObj);
             }
         }
     }

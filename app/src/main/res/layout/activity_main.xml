@@ -99,21 +99,21 @@
         android:layout_alignRight="@+id/hourLinearLayout"
         android:layout_alignEnd="@+id/hourLinearLayout" />
 
-    <ImageButton
-        android:layout_width="50dp"
-        android:layout_height="50dp"
-        android:id="@+id/imageButton"
-        android:background="@drawable/ic_sms_black"
-        android:onClick="checkSms"
-        android:layout_below="@+id/payButton"
-        android:layout_alignParentStart="true" />
-
     <ProgressBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/progressBar"
-        android:layout_alignBottom="@+id/imageButton"
-        android:layout_toEndOf="@+id/imageButton"
-        android:visibility="invisible" />
+        android:visibility="invisible"
+        android:layout_below="@+id/sendMessage"
+        android:layout_alignEnd="@+id/smsText" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/sendMessage"
+        android:textColor="@android:color/black"
+        android:layout_below="@+id/payButton"
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

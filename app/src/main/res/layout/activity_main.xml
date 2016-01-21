@@ -98,6 +98,28 @@
         android:onClick="payButtonOnClick"
         android:layout_alignRight="@+id/hourLinearLayout"
         android:layout_alignEnd="@+id/hourLinearLayout" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_below="@+id/hourDesc"
+        android:id="@+id/confirmLinearLayout"
+        android:visibility="invisible">
+        <Button
+            android:text="@string/confirmButtonText"
+            android:id="@+id/confirmButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="confirmButtonOnClick"/>
+        <Button
+            android:text="@string/cancelButtonText"
+            android:id="@+id/cancelButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="cancelButtonOnClick"/>
+    </LinearLayout>
 
     <ProgressBar
         android:layout_width="wrap_content"
@@ -115,5 +137,15 @@
         android:textColor="@android:color/black"
         android:layout_below="@+id/payButton"
         android:layout_centerHorizontal="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Q"
+        android:id="@+id/button"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="88dp"
+        android:onClick="qClick"        />
 
 </RelativeLayout>

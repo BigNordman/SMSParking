@@ -75,4 +75,6 @@
     <string name="sendSmsWaiting">Ожидаем ответного сообщения</string>
     <string name="smsNumberBack">6996</string>
     <string name="incomingSmsFailed">Не обнаружено входящее смс</string>
+    <string name="confirmButtonText">Подтвердить</string>
+    <string name="cancelButtonText">Отменить</string>
 </resources>

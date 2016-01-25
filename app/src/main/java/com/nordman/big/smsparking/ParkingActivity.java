@@ -10,6 +10,8 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 
+import com.lylc.widget.circularprogressbar.CircularProgressBar;
+
 
 public class ParkingActivity extends Activity {
 
@@ -22,7 +24,11 @@ public class ParkingActivity extends Activity {
         Log.d("LOG", "LastParkTime = " + prefs.getString("LastParkTime", ""));
         Log.d("LOG", "LastHours = " + prefs.getString("LastHours", ""));
 
-        //moveTaskToBack(true);
+        CircularProgressBar c1 = (CircularProgressBar) findViewById(R.id.circularprogressbar1);
+        c1.setProgress(45);
+        c1.setTitle("June");
+        c1.setSubTitle("2013");
+
     }
 
     public void stopParkingButtonOnClick(View view) {
@@ -35,7 +41,7 @@ public class ParkingActivity extends Activity {
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
             AlertDialog alertDialog = new AlertDialog.Builder(this)
-                    .setMessage("Выйти?")
+                    .setMessage("Выйти из приложения?")
                     .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             moveTaskToBack(true);

@@ -4,7 +4,8 @@
     android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity">
+    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".MainActivity"
+    android:id="@+id/mainLayout">
 
     <TextView
         android:layout_width="wrap_content"
@@ -98,36 +99,6 @@
         android:onClick="payButtonOnClick"
         android:layout_alignRight="@+id/hourLinearLayout"
         android:layout_alignEnd="@+id/hourLinearLayout" />
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_below="@+id/hourDesc"
-        android:id="@+id/confirmLinearLayout"
-        android:visibility="invisible">
-        <Button
-            android:text="@string/confirmButtonText"
-            android:id="@+id/confirmButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="confirmButtonOnClick"/>
-        <Button
-            android:text="@string/cancelButtonText"
-            android:id="@+id/cancelButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="cancelButtonOnClick"/>
-    </LinearLayout>
-
-    <ProgressBar
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/progressBar"
-        android:visibility="invisible"
-        android:layout_below="@+id/sendMessage"
-        android:layout_alignEnd="@+id/smsText" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -137,6 +108,14 @@
         android:textColor="@android:color/black"
         android:layout_below="@+id/payButton"
         android:layout_centerHorizontal="true" />
+
+    <ProgressBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/progressBar"
+        android:visibility="invisible"
+        android:layout_below="@+id/sendMessage"
+        android:layout_alignEnd="@+id/smsText" />
 
     <Button
         android:layout_width="wrap_content"

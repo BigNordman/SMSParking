@@ -72,9 +72,8 @@
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="payButtonText">Оплатить с помощью СМС</string>
     <string name="sendSmsFailed">Не обнаружено исходящее СМС</string>
-    <string name="sendSmsWaiting">Ожидаем ответного сообщения</string>
-    <string name="smsNumberBack">6996</string>
-    <string name="incomingSmsFailed">Не обнаружено входящее смс</string>
-    <string name="confirmButtonText">Подтвердить</string>
-    <string name="cancelButtonText">Отменить</string>
+    <string name="sendSmsWaiting">Ожидаем СМС с подтверждением платежа</string>
+    <string name="incomingSmsFailed">Не обнаружено входящее СМС</string>
+    <string name="stopParkingButtonText">Прекратить досрочно</string>
+    <string name="prolongButtonText">Продлить</string>
 </resources>

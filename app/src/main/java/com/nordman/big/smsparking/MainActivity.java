@@ -1,6 +1,5 @@
 package com.nordman.big.smsparking;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -11,13 +10,11 @@ import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -30,7 +27,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -102,8 +98,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (waitForSms){
 
             int smsNumber;
-            if (appStatus==STATUS_INITIAL) smsNumber=R.string.smsNumber;
-            else smsNumber=R.string.smsNumberBack;
+            smsNumber=R.string.smsNumber;
 
             Log.d("LOG", "check for outgoing sms...");
             waitForSms=false;
@@ -201,20 +196,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         ((TextView) this.findViewById(R.id.hourDesc)).setText(hourDesc);
 
         Button payButton = (Button) findViewById(R.id.payButton);
-        LinearLayout confirmLinearLayout = (LinearLayout) findViewById(R.id.confirmLinearLayout);
 
         if (appStatus==STATUS_INITIAL) {
             payButton.setVisibility(View.VISIBLE);
-            confirmLinearLayout.setVisibility(View.INVISIBLE);
             // энаблим/дизаблим кнопку "оплатить"
             if (!regNum.equals("________") & currentZone != null)
                 this.findViewById(R.id.payButton).setEnabled(true);
             else this.findViewById(R.id.payButton).setEnabled(false);
-        }
-
-        if (appStatus==STATUS_CONFIRM) {
-            payButton.setVisibility(View.INVISIBLE);
-            confirmLinearLayout.setVisibility(View.VISIBLE);
         }
     }
 
@@ -297,25 +285,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         sendDate = new Date();
     }
 
-    public void confirmButtonOnClick(View view) {
-    }
-
-    public void cancelButtonOnClick(View view) {
-        Uri uri = Uri.parse("smsto:" + getResources().getString(R.string.smsNumberBack));
-        Intent it = new Intent(Intent.ACTION_SENDTO, uri);
-        it.putExtra("sms_body", "0");   // послать 0, если хотим отменить
-        startActivity(it);
-        waitForSms = true;
-        sendDate = new Date();
-    }
-
     final Handler h = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
             String aResponse = msg.getData().getString("message");
             if ((null != aResponse)){
                 ((TextView) findViewById(R.id.sendMessage)).setText(aResponse);
-                if (aResponse.indexOf("Сумма:")==0){    // если смс именно с подтверждением суммы, а не какое-то другое, то меняем интерфейс на "подтверждение"
+                if (aResponse.indexOf("Сумма:")==0){    // если смс именно с подтверждением оплаты, то меняем интерфейс на "припарковано"
                     appStatus=STATUS_CONFIRM;
                     updateSms();
                 }
@@ -344,22 +320,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         public void run() {
             tickCount++;
             Log.d("LOG", "timer tick! " + String.valueOf(tickCount) );
-            smsText = smsMgr.GetIncomingSms(sendDate,getResources().getString(R.string.smsNumberBack));
+            smsText = smsMgr.GetIncomingSms(sendDate,getResources().getString(R.string.smsNumber));
             if (smsText!=null){
                 timer.cancel();
                 timer = null;
-
+/*
                 try {
                     smsText = smsText.substring(smsText.indexOf("Сумма:"),smsText.indexOf("Для подтверждения платежа")-1);
                 } catch (Exception ignored){}
-
+*/
                 msgObj = h.obtainMessage();
                 b = new Bundle();
                 b.putString("message", smsText);
                 msgObj.setData(b);
                 h.sendMessage(msgObj);
             }
-            if(tickCount>=6) {
+
+            if(tickCount>=20) {
                 timer.cancel();
                 timer = null;
 
@@ -373,23 +350,15 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     public void qClick(View view) {
-        /*
-        Calendar cal = Calendar.getInstance();
-        cal.set(Calendar.YEAR, 2016);
-        cal.set(Calendar.MONTH, 0);
-        cal.set(Calendar.DAY_OF_MONTH, 16);
-        cal.set(Calendar.HOUR_OF_DAY, 15);
+        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
+        if (sendDate==null) sendDate=new Date();
+        SharedPreferences.Editor ed = prefs.edit();
+        ed.putString("LastParkTime", String.valueOf(sendDate.getTime()));
+        ed.putString("LastHours", hours);
+        ed.apply();
 
-
-        Date sendDate = cal.getTime();
-        String smsText = smsMgr.GetIncomingSms(sendDate, getResources().getString(R.string.smsNumberBack));
-        try {
-            smsText = smsText.substring(smsText.indexOf("Сумма:"),smsText.indexOf("Для подтверждения платежа")-1);
-        } catch (Exception ignored){}
-        */
-        final TelephonyManager telephonyManager = (TelephonyManager) this.getSystemService(Context.TELEPHONY_SERVICE);
-        Log.d("LOG", "NetworkOperatorName = " + telephonyManager.getNetworkOperatorName());
-        Log.d("LOG", "NetworkOperator = " + telephonyManager.getNetworkOperator());
+        Intent intent = new Intent(this, ParkingActivity.class);
+        startActivity(intent);
     }
 
 }

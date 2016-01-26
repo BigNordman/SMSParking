@@ -1,5 +1,7 @@
 package com.nordman.big.smsparking;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -11,6 +13,7 @@ import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +37,8 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, PopupMenu.OnMenuItemClickListener {
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 5;
+    public static final long MILLIS_IN_HOUR = 3600000;
+    public static final long MILLIS_IN_MINUTE = 60000;
     public static final int STATUS_INITIAL = 1;
     public static final int STATUS_CONFIRM = 2;
     int appStatus = STATUS_INITIAL;
@@ -70,6 +75,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     .build();
         }
     }
+
+    // есть ли текущая оплаченная парковка
+    private boolean parkingActive() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        long lh = Long.parseLong(prefs.getString("LastHours", "1"));
+        long lpt = Long.parseLong(prefs.getString("LastParkTime", "0"));
+        long current = (new Date()).getTime();
+        int curProgress = (int) (100 * (lh*MILLIS_IN_HOUR - (current - lpt) )/(lh*MILLIS_IN_HOUR));
+
+        return (curProgress>0);
+    }
+
     @Override
     protected void onStart() {
         Log.d("LOG", "onStart...");
@@ -89,6 +106,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     protected void onResume() {
         Log.d("LOG", "onResume...");
+
+        if (parkingActive()){
+            Intent intent = new Intent(this, ParkingActivity.class);
+            startActivity(intent);
+        }
+
         super.onResume();
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
         regNum = prefs.getString("regnum", "________");
@@ -361,4 +384,26 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         startActivity(intent);
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
+            AlertDialog alertDialog = new AlertDialog.Builder(this)
+                    .setMessage("Выйти из приложения?")
+                    .setPositiveButton("Да", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            timer.cancel();
+                            timer = null;
+                            moveTaskToBack(true);
+                            finish();
+                        }
+                    })
+                    .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                        }
+                    })
+                    .show();
+            return false;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
 }

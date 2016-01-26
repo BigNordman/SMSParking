@@ -115,7 +115,7 @@
         android:id="@+id/progressBar"
         android:visibility="invisible"
         android:layout_below="@+id/sendMessage"
-        android:layout_alignEnd="@+id/smsText" />
+        android:layout_alignEnd="@+id/smsText"/>
 
     <Button
         android:layout_width="wrap_content"

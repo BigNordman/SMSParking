@@ -52,9 +52,9 @@
         android:indeterminate="false"
         circular:cpb_title="112 мин"
         circular:cpb_subtitle="осталось"
-        circular:cpb_progressColor="#3F51B5"
-        circular:cpb_titleColor="#3F51B5"
-        circular:cpb_subtitleColor="#3F51B5"
+        circular:cpb_progressColor="@color/colorPrimary"
+        circular:cpb_titleColor="@color/colorPrimary"
+        circular:cpb_subtitleColor="@color/colorPrimary"
         android:progress="56"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true" />

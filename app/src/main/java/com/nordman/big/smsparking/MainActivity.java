@@ -218,7 +218,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public boolean onMenuItemClick(MenuItem item) {
-        //Log.d("LOG", "MenuItemId = " + String.valueOf(item.getItemId()));
         smsMgr.currentZone = geoMgr.getParkZone(item.getItemId());
         updateView();
 
@@ -322,32 +321,4 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void qClick(View view) {
         smsMgr.startParking();
     }
-/*
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            new AlertDialog.Builder(this)
-                    .setMessage("Выйти из приложения?")
-                    .setPositiveButton("Да", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            if (timer != null) {
-                                timer.cancel();
-                                timer = null;
-                            }
-
-                            moveTaskToBack(true);
-                            finish();
-
-                        }
-                    })
-                    .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                        }
-                    })
-                    .show();
-            return false;
-        }
-        return super.onKeyDown(keyCode, event);
-    }
-*/
 }

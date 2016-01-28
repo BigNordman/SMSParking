@@ -20,20 +20,29 @@
         android:layout_marginTop="45dp">
 
         <Button
-            android:text="@string/stopParkingButtonText"
             android:id="@+id/stopParkingButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:text="@string/stopParkingButtonText"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:layout_height="50dp"
             android:layout_weight="1"
-            android:onClick="stopParkingButtonOnClick"/>
-        <Button
-            android:text="@string/prolongButtonText"
-            android:id="@+id/prolongButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:onClick="prolongButtonOnClick"/>
+            android:background="@drawable/button_shape"
+            android:shadowColor="#A8A8A8"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="5"
+            android:onClick="stopParkingButtonOnClick"
+            android:layout_width="wrap_content" />
     </LinearLayout>
+    <Button
+        android:text="Q"
+        android:id="@+id/prolongButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:onClick="prolongButtonOnClick"
+        android:layout_below="@+id/parkingButtonsLinearLayout"
+        android:layout_centerHorizontal="true" />
 
     <com.lylc.widget.circularprogressbar.CircularProgressBar
         android:id="@+id/circularprogressbar1"

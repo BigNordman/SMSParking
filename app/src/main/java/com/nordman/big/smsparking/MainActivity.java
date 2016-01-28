@@ -3,13 +3,11 @@ package com.nordman.big.smsparking;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,9 +15,7 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.PopupMenu;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,35 +33,23 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, PopupMenu.OnMenuItemClickListener {
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 5;
-    public static final long MILLIS_IN_HOUR = 3600000;
-    public static final long MILLIS_IN_MINUTE = 60000;
+    public static final int MAX_TICK_WAITING = 60;
     public static final int STATUS_INITIAL = 1;
-    public static final int STATUS_CONFIRM = 2;
+    public static final int STATUS_WAITING_SMS = 3;
+    public static final int STATUS_SMS_SENT = 4;
+    public static final int STATUS_SMS_NOT_SENT = 5;
     int appStatus = STATUS_INITIAL;
 
-    Button getZoneButton;
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
-    GeoManager geo = new GeoManager(this);
+    GeoManager geoMgr = new GeoManager(this);
     SmsManager smsMgr = new SmsManager(this);
     Timer timer = null;
-    ProgressBar progressBar = null;
-
-    String sms = null;
-    String regNum = "________";
-    ParkZone currentZone = null;
-    String hours = "1";
-
-    boolean waitForSms = false;
-    Date sendDate;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        // обработчик клика "Определить паркинг"
-        getZoneButton = (Button) this.findViewById(R.id.getZoneButton);
 
         if (mGoogleApiClient == null) {
             mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -76,16 +60,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
     }
 
-    // есть ли текущая оплаченная парковка
-    private boolean parkingActive() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        long lh = Long.parseLong(prefs.getString("LastHours", "1"));
-        long lpt = Long.parseLong(prefs.getString("LastParkTime", "0"));
-        long current = (new Date()).getTime();
-        int curProgress = (int) (100 * (lh*MILLIS_IN_HOUR - (current - lpt) )/(lh*MILLIS_IN_HOUR));
-
-        return (curProgress>0);
-    }
 
     @Override
     protected void onStart() {
@@ -107,36 +81,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onResume() {
         Log.d("LOG", "onResume...");
 
-        if (parkingActive()){
-            Intent intent = new Intent(this, ParkingActivity.class);
-            startActivity(intent);
+        if (smsMgr.parkingActive()){
+            Log.d("LOG", "smsMgr.parkingActive...");
+            smsMgr.showParkingScreen();
         }
 
         super.onResume();
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        regNum = prefs.getString("regnum", "________");
-        updateSms();
 
         // если произошло возвращение из смс-приложения, то проверим, была ли отослана смс
-        if (waitForSms){
-
-            int smsNumber;
-            smsNumber=R.string.smsNumber;
-
-            Log.d("LOG", "check for outgoing sms...");
-            waitForSms=false;
-            TextView sendMessageText = (TextView) this.findViewById(R.id.sendMessage);
-            if(smsMgr.IsSent(sendDate,getResources().getString(smsNumber))) {
-                Log.d("LOG", "sms was sent...");
-                sendMessageText.setText(getResources().getString(R.string.sendSmsWaiting));
-                sendMessageText.setTextColor(Color.BLACK);
+        if (appStatus==STATUS_WAITING_SMS){
+            if(smsMgr.IsSent(getResources().getString(R.string.smsNumber))) {
+                appStatus=STATUS_SMS_SENT;
                 checkSms();
             } else {
-                Log.d("LOG", "sms wasn't sent...");
-                sendMessageText.setText(getResources().getString(R.string.sendSmsFailed));
-                sendMessageText.setTextColor(Color.RED);
+                appStatus=STATUS_SMS_NOT_SENT;
             }
         }
+        updateView();
     }
 
     @Override
@@ -163,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public void onConnected(Bundle bundle) {
         Log.d("LOG", "onConnected...");
         createLocationRequest();
-        getZoneButton.setEnabled(true);
+        this.findViewById(R.id.getZoneButton).setEnabled(true);
     }
 
     @Override
@@ -178,7 +139,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     @Override
     public void onLocationChanged(Location location) {
-        //Log.d("LOG", location.toString());
+        Log.d("LOG", "onLocationChanged...");
     }
 
     protected void createLocationRequest() {
@@ -193,48 +154,48 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this);
     }
 
-    private void updateSms(){
-        // формируем строку sms
-        sms = "p66*";
-        TextView zoneDesc = (TextView) this.findViewById(R.id.zoneDesc);
+    private void updateView(){
+        switch (appStatus) {
+            case STATUS_INITIAL:
+                // формируем строку sms
+                smsMgr.updateSms();
+                TextView zoneDesc = (TextView) this.findViewById(R.id.zoneDesc);
 
-        if (currentZone==null) {
-            sms += "___*";
-            zoneDesc.setText("Паркинг не определен");
-            zoneDesc.setTextColor(Color.RED);
-        } else {
-            sms += currentZone.getZoneNumber().toString() + "*";
-            zoneDesc.setText(currentZone.getZoneDesc());
-            zoneDesc.setTextColor(Color.BLACK);
+                if (smsMgr.currentZone==null) {
+                    zoneDesc.setText("Паркинг не определен");
+                    zoneDesc.setTextColor(Color.RED);
+                } else {
+                    zoneDesc.setText(smsMgr.currentZone.getZoneDesc());
+                    zoneDesc.setTextColor(Color.BLACK);
+                }
+                // выводим sms на экран
+                ((TextView) this.findViewById(R.id.smsText)).setText(smsMgr.sms);
+                // выводим часы
+                ((TextView) this.findViewById(R.id.hourDesc)).setText(smsMgr.hourDesc());
+                // энаблим/дизаблим кнопку "оплатить"
+                if (smsMgr.smsComplete()) this.findViewById(R.id.payButton).setEnabled(true);
+                else this.findViewById(R.id.payButton).setEnabled(false);
+                break;
+            case STATUS_SMS_SENT:
+                Log.d("LOG", "sms was sent...");
+                ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsWaiting));
+                ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
+                break;
+            case STATUS_SMS_NOT_SENT:
+                Log.d("LOG", "sms wasn't sent...");
+                ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsFailed));
+                ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
+                break;
         }
-        sms += regNum + "*" + hours;
 
-        // выводим sms на экран
-        ((TextView) this.findViewById(R.id.smsText)).setText(sms);
-
-        // выводим часы
-        String hourDesc;
-        if (hours.equals("1")) hourDesc = hours + " час";
-        else hourDesc = hours + " часа";
-        ((TextView) this.findViewById(R.id.hourDesc)).setText(hourDesc);
-
-        Button payButton = (Button) findViewById(R.id.payButton);
-
-        if (appStatus==STATUS_INITIAL) {
-            payButton.setVisibility(View.VISIBLE);
-            // энаблим/дизаблим кнопку "оплатить"
-            if (!regNum.equals("________") & currentZone != null)
-                this.findViewById(R.id.payButton).setEnabled(true);
-            else this.findViewById(R.id.payButton).setEnabled(false);
-        }
     }
 
     public void getZoneButtonOnClick(View v) {
-        Log.d("LOG", geo.getCoordinates(mGoogleApiClient));
-        Toast.makeText(v.getContext(), geo.getCoordinates(mGoogleApiClient), Toast.LENGTH_LONG).show();
+        Log.d("LOG", geoMgr.getCoordinates(mGoogleApiClient));
+        Toast.makeText(v.getContext(), geoMgr.getCoordinates(mGoogleApiClient), Toast.LENGTH_LONG).show();
 
-        currentZone = geo.getParkZone(mGoogleApiClient);
-        updateSms();
+        smsMgr.currentZone = geoMgr.getParkZone(mGoogleApiClient);
+        updateView();
     }
 
     public void setZoneButtonOnClick(View v) {
@@ -242,7 +203,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Menu mnu = popup.getMenu();
 
         // заполняем меню из xml с парковочными зонами
-        ArrayList<ParkZone> zones = geo.getParkZoneList();
+        ArrayList<ParkZone> zones = geoMgr.getParkZoneList();
 
         for(ParkZone zone : zones){
             mnu.add(0,zone.getZoneNumber(),zone.getZoneNumber(),zone.getZoneNumber().toString());
@@ -258,8 +219,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         //Log.d("LOG", "MenuItemId = " + String.valueOf(item.getItemId()));
-        currentZone = geo.getParkZone(item.getItemId());
-        updateSms();
+        smsMgr.currentZone = geoMgr.getParkZone(item.getItemId());
+        updateView();
 
         return true;
     }
@@ -267,9 +228,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        outState.putString("sms", sms);
-        if (currentZone!=null) outState.putInt("currentZoneNumber", currentZone.getZoneNumber());
-        outState.putString("hours", hours);
+        outState.putString("sms", smsMgr.sms);
+        if (smsMgr.currentZone!=null) outState.putInt("currentZoneNumber", smsMgr.currentZone.getZoneNumber());
+        outState.putString("hours", smsMgr.hours);
 
         Log.d("LOG", "onSaveInstanceState");
     }
@@ -277,35 +238,35 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
 
-        sms = savedInstanceState.getString("sms");
-        currentZone = geo.getParkZone(savedInstanceState.getInt("currentZoneNumber"));
-        hours = savedInstanceState.getString("hours");
+        smsMgr.sms = savedInstanceState.getString("sms");
+        smsMgr.currentZone = geoMgr.getParkZone(savedInstanceState.getInt("currentZoneNumber"));
+        smsMgr.hours = savedInstanceState.getString("hours");
 
         Log.d("LOG", "onRestoreInstanceState");
     }
 
     public void oneHourButtonOnClick(View view) {
-        hours = "1";
-        updateSms();
+        smsMgr.hours = "1";
+        updateView();
     }
 
     public void twoHourButtonOnClick(View view) {
-        hours = "2";
-        updateSms();
+        smsMgr.hours = "2";
+        updateView();
     }
 
     public void threeHourButtonOnClick(View view) {
-        hours = "3";
-        updateSms();
+        smsMgr.hours = "3";
+        updateView();
     }
 
     public void payButtonOnClick(View view) {
         Uri uri = Uri.parse("smsto:" + getResources().getString(R.string.smsNumber));
         Intent it = new Intent(Intent.ACTION_SENDTO, uri);
-        it.putExtra("sms_body", sms);
+        it.putExtra("sms_body", smsMgr.sms);
         startActivity(it);
-        waitForSms = true;
-        sendDate = new Date();
+        appStatus = STATUS_WAITING_SMS;
+        smsMgr.sendDate = new Date();
     }
 
     final Handler h = new Handler(new Handler.Callback() {
@@ -314,20 +275,18 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             String aResponse = msg.getData().getString("message");
             if ((null != aResponse)){
                 ((TextView) findViewById(R.id.sendMessage)).setText(aResponse);
-                if (aResponse.indexOf("Сумма:")==0){    // если смс именно с подтверждением оплаты, то меняем интерфейс на "припарковано"
-                    appStatus=STATUS_CONFIRM;
-                    updateSms();
+                if (aResponse.indexOf("Заказ оплачен")==0){    // если смс именно с подтверждением оплаты, то меняем интерфейс на "припарковано"
+                    smsMgr.startParking();
                 }
             }
-            if (progressBar!=null) progressBar.setVisibility(View.INVISIBLE);
+            findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
             return false;
         }
     });
 
     public void checkSms() {
         if (timer==null){
-            progressBar = (ProgressBar) findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.VISIBLE);
+            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
 
             timer = new Timer();
             timer.schedule(new UpdateTimeTask(), 0, 5000); //тикаем каждые 5 секунд
@@ -343,58 +302,42 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         public void run() {
             tickCount++;
             Log.d("LOG", "timer tick! " + String.valueOf(tickCount) );
-            smsText = smsMgr.GetIncomingSms(sendDate,getResources().getString(R.string.smsNumber));
-            if (smsText!=null){
+            smsText = smsMgr.GetIncomingSms(getResources().getString(R.string.smsNumber));
+            if (smsText!=null || tickCount>=MAX_TICK_WAITING){
                 timer.cancel();
                 timer = null;
-/*
-                try {
-                    smsText = smsText.substring(smsText.indexOf("Сумма:"),smsText.indexOf("Для подтверждения платежа")-1);
-                } catch (Exception ignored){}
-*/
                 msgObj = h.obtainMessage();
                 b = new Bundle();
-                b.putString("message", smsText);
+
+                if (smsText!=null) b.putString("message", smsText);
+                else b.putString("message", getResources().getString(R.string.incomingSmsFailed));
+
                 msgObj.setData(b);
                 h.sendMessage(msgObj);
             }
 
-            if(tickCount>=20) {
-                timer.cancel();
-                timer = null;
-
-                msgObj = h.obtainMessage();
-                b = new Bundle();
-                b.putString("message", getResources().getString(R.string.incomingSmsFailed));
-                msgObj.setData(b);
-                h.sendMessage(msgObj);
-            }
         }
     }
 
     public void qClick(View view) {
-        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(this);
-        if (sendDate==null) sendDate=new Date();
-        SharedPreferences.Editor ed = prefs.edit();
-        ed.putString("LastParkTime", String.valueOf(sendDate.getTime()));
-        ed.putString("LastHours", hours);
-        ed.apply();
-
-        Intent intent = new Intent(this, ParkingActivity.class);
-        startActivity(intent);
+        smsMgr.startParking();
     }
-
+/*
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            AlertDialog alertDialog = new AlertDialog.Builder(this)
+            new AlertDialog.Builder(this)
                     .setMessage("Выйти из приложения?")
                     .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            timer.cancel();
-                            timer = null;
+                            if (timer != null) {
+                                timer.cancel();
+                                timer = null;
+                            }
+
                             moveTaskToBack(true);
                             finish();
+
                         }
                     })
                     .setNegativeButton("Нет", new DialogInterface.OnClickListener() {
@@ -406,4 +349,5 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
         return super.onKeyDown(keyCode, event);
     }
+*/
 }

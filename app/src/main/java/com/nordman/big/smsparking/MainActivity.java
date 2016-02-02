@@ -1,7 +1,5 @@
 package com.nordman.big.smsparking;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.location.Location;
@@ -11,7 +9,6 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -33,9 +30,11 @@ import java.util.TimerTask;
 public class MainActivity extends AppCompatActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, PopupMenu.OnMenuItemClickListener {
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 5;
+
     public static final int MAX_TICK_WAITING = 60;
     public static final int STATUS_INITIAL = 1;
-    public static final int STATUS_WAITING_SMS = 3;
+    public static final int STATUS_WAITING_OUT = 2;
+    public static final int STATUS_WAITING_IN = 3;
     public static final int STATUS_SMS_SENT = 4;
     public static final int STATUS_SMS_NOT_SENT = 5;
     int appStatus = STATUS_INITIAL;
@@ -44,7 +43,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     LocationRequest mLocationRequest;
     GeoManager geoMgr = new GeoManager(this);
     SmsManager smsMgr = new SmsManager(this);
-    Timer timer = null;
+    Timer tick = null;
+    int tickWaiting = 0;
+    String sendMessage = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +66,12 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     protected void onStart() {
         Log.d("LOG", "onStart...");
         mGoogleApiClient.connect();
+
+        if (tick==null){
+            tick = new Timer();
+            tick.schedule(new UpdateTickTask(), 0, 1000); //тикаем каждую секунду
+        }
+
         super.onStart();
     }
 
@@ -74,6 +81,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         super.onStop();
         if(mGoogleApiClient.isConnected()) {
             mGoogleApiClient.disconnect();
+        }
+        if (tick!=null) {
+            tick.cancel();
+            tick = null;
         }
     }
 
@@ -87,16 +98,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         }
 
         super.onResume();
-
-        // если произошло возвращение из смс-приложения, то проверим, была ли отослана смс
-        if (appStatus==STATUS_WAITING_SMS){
-            if(smsMgr.IsSent(getResources().getString(R.string.smsNumber))) {
-                appStatus=STATUS_SMS_SENT;
-                checkSms();
-            } else {
-                appStatus=STATUS_SMS_NOT_SENT;
-            }
-        }
         updateView();
     }
 
@@ -155,34 +156,53 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     }
 
     private void updateView(){
+        smsMgr.updateSms();
+        TextView zoneDesc = (TextView) this.findViewById(R.id.zoneDesc);
+
+        if (smsMgr.currentZone==null) {
+            zoneDesc.setText("Паркинг не определен");
+            zoneDesc.setTextColor(Color.RED);
+        } else {
+            zoneDesc.setText(smsMgr.currentZone.getZoneDesc());
+            zoneDesc.setTextColor(Color.BLACK);
+        }
+        // выводим sms на экран
+        ((TextView) this.findViewById(R.id.smsText)).setText(smsMgr.sms);
+        // выводим часы
+        ((TextView) this.findViewById(R.id.hourDesc)).setText(smsMgr.hourDesc());
+
+        // формируем строку sms
+        // энаблим/дизаблим кнопку "оплатить"
+        if (smsMgr.smsComplete()) this.findViewById(R.id.payButton).setEnabled(true);
+        else this.findViewById(R.id.payButton).setEnabled(false);
+
         switch (appStatus) {
             case STATUS_INITIAL:
-                // формируем строку sms
-                smsMgr.updateSms();
-                TextView zoneDesc = (TextView) this.findViewById(R.id.zoneDesc);
-
-                if (smsMgr.currentZone==null) {
-                    zoneDesc.setText("Паркинг не определен");
-                    zoneDesc.setTextColor(Color.RED);
-                } else {
-                    zoneDesc.setText(smsMgr.currentZone.getZoneDesc());
-                    zoneDesc.setTextColor(Color.BLACK);
-                }
-                // выводим sms на экран
-                ((TextView) this.findViewById(R.id.smsText)).setText(smsMgr.sms);
-                // выводим часы
-                ((TextView) this.findViewById(R.id.hourDesc)).setText(smsMgr.hourDesc());
-                // энаблим/дизаблим кнопку "оплатить"
-                if (smsMgr.smsComplete()) this.findViewById(R.id.payButton).setEnabled(true);
-                else this.findViewById(R.id.payButton).setEnabled(false);
+                findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
+                ((TextView) this.findViewById(R.id.sendMessage)).setText(sendMessage);
+                ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
+                break;
+            case STATUS_WAITING_OUT:
+                Log.d("LOG", "waiting outgoing sms...");
+                findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.outgoingSmsWaiting));
+                ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
+                break;
+            case STATUS_WAITING_IN:
+                Log.d("LOG", "waiting incoming sms...");
+                findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+                ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.incomingSmsWaiting));
+                ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
                 break;
             case STATUS_SMS_SENT:
                 Log.d("LOG", "sms was sent...");
+                findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsWaiting));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
                 break;
             case STATUS_SMS_NOT_SENT:
                 Log.d("LOG", "sms wasn't sent...");
+                findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsFailed));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
                 break;
@@ -230,6 +250,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         outState.putString("sms", smsMgr.sms);
         if (smsMgr.currentZone!=null) outState.putInt("currentZoneNumber", smsMgr.currentZone.getZoneNumber());
         outState.putString("hours", smsMgr.hours);
+        if (smsMgr.sendDate !=null) outState.putLong("sendDate", smsMgr.sendDate.getTime());
+        outState.putInt("status", appStatus);
 
         Log.d("LOG", "onSaveInstanceState");
     }
@@ -240,6 +262,8 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         smsMgr.sms = savedInstanceState.getString("sms");
         smsMgr.currentZone = geoMgr.getParkZone(savedInstanceState.getInt("currentZoneNumber"));
         smsMgr.hours = savedInstanceState.getString("hours");
+        smsMgr.sendDate = new Date(savedInstanceState.getLong("sendDate"));
+        appStatus = savedInstanceState.getInt("status");
 
         Log.d("LOG", "onRestoreInstanceState");
     }
@@ -264,59 +288,69 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         Intent it = new Intent(Intent.ACTION_SENDTO, uri);
         it.putExtra("sms_body", smsMgr.sms);
         startActivity(it);
-        appStatus = STATUS_WAITING_SMS;
         smsMgr.sendDate = new Date();
+        appStatus = STATUS_WAITING_OUT;
+        tickWaiting = 0;
     }
 
-    final Handler h = new Handler(new Handler.Callback() {
+    private class UpdateTickTask extends TimerTask {
+        public void run() {
+            tickHandler.sendEmptyMessage(0);
+        }
+    }
+
+    final Handler tickHandler = new Handler(new Handler.Callback() {
         @Override
         public boolean handleMessage(Message msg) {
-            String aResponse = msg.getData().getString("message");
-            if ((null != aResponse)){
-                ((TextView) findViewById(R.id.sendMessage)).setText(aResponse);
-                if (aResponse.indexOf("Заказ оплачен")==0){    // если смс именно с подтверждением оплаты, то меняем интерфейс на "припарковано"
-                    smsMgr.startParking();
+            // обрабатываем сообщение таймера
+            Log.d("LOG", "***tick! ");
+
+            if(appStatus==STATUS_WAITING_OUT){
+                // ждем исходящее смс
+                Log.d("LOG", "***ждем исходящее смс");
+                tickWaiting++;
+
+                if (smsMgr.IsSent(getResources().getString(R.string.smsNumber))){
+                    // обнаружили, что смс отправлена. Меняем статус на ожидание входящего смс
+                    appStatus=STATUS_WAITING_IN;
+                    tickWaiting = 0;
+                }
+                if (tickWaiting==MAX_TICK_WAITING){
+                    // время ожидания исходящего смс истекло
+                    appStatus=STATUS_SMS_NOT_SENT;
                 }
             }
-            findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
+
+            if(appStatus==STATUS_WAITING_IN){
+                // ждем входящее смс
+                Log.d("LOG", "***ждем входящее смс");
+                tickWaiting++;
+
+                String smsText = smsMgr.GetIncomingSms(getResources().getString(R.string.smsNumber));
+                if (smsText!=null){
+                    // какая-то смс с искомого номера пришла...
+                    if (smsText.indexOf(getResources().getString(R.string.smsOrderPaid))==0){
+                        // если смс именно с подтверждением оплаты, то меняем интерфейс на "припарковано"
+                        smsMgr.startParking();
+                    } else {
+                        // если какая-то другая смс - просто выводим ее содержимое
+                        sendMessage = smsText;
+                        appStatus = STATUS_INITIAL;
+                    }
+
+                }
+                if (tickWaiting==MAX_TICK_WAITING){
+                    // время ожидания исходящего смс истекло
+                    appStatus=STATUS_SMS_NOT_SENT;
+                }
+
+            }
+
+            updateView();
             return false;
         }
     });
 
-    public void checkSms() {
-        if (timer==null){
-            findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
-
-            timer = new Timer();
-            timer.schedule(new UpdateTimeTask(), 0, 5000); //тикаем каждые 5 секунд
-        }
-    }
-
-
-    private class UpdateTimeTask extends TimerTask {
-        int tickCount = 0;
-        String smsText;
-        Message msgObj;
-        Bundle b;
-        public void run() {
-            tickCount++;
-            Log.d("LOG", "timer tick! " + String.valueOf(tickCount) );
-            smsText = smsMgr.GetIncomingSms(getResources().getString(R.string.smsNumber));
-            if (smsText!=null || tickCount>=MAX_TICK_WAITING){
-                timer.cancel();
-                timer = null;
-                msgObj = h.obtainMessage();
-                b = new Bundle();
-
-                if (smsText!=null) b.putString("message", smsText);
-                else b.putString("message", getResources().getString(R.string.incomingSmsFailed));
-
-                msgObj.setData(b);
-                h.sendMessage(msgObj);
-            }
-
-        }
-    }
 
     public void qClick(View view) {
         smsMgr.startParking();

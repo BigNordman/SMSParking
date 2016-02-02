@@ -13,11 +13,43 @@
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:id="@+id/parkingButtonsLinearLayout"
-        android:layout_below="@+id/circularprogressbar1"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="45dp">
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:id="@+id/mainLinearLayout">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Зона 203"
+            android:id="@+id/zoneText"
+            android:textSize="@dimen/text_size_large"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
+            android:textAlignment="center"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:text="Время начала 12:33"
+            android:id="@+id/beginText"
+            android:textSize="@dimen/text_size_large"
+            android:textAlignment="center" />
+
+        <com.lylc.widget.circularprogressbar.CircularProgressBar
+            android:id="@+id/circularprogressbar1"
+            style="@style/Widget.ProgressBar.CircularProgressBar"
+            android:layout_width="140dip"
+            android:layout_height="140dip"
+            android:indeterminate="false"
+            circular:cpb_title="112 мин"
+            circular:cpb_subtitle="осталось"
+            circular:cpb_progressColor="@color/colorPrimary"
+            circular:cpb_titleColor="@color/colorPrimary"
+            circular:cpb_subtitleColor="@color/colorPrimary"
+            android:progress="56"
+            android:layout_below="@+id/beginText"
+            android:layout_centerHorizontal="true" />
 
         <Button
             android:id="@+id/stopParkingButton"
@@ -32,8 +64,27 @@
             android:shadowDy="0"
             android:shadowRadius="5"
             android:onClick="stopParkingButtonOnClick"
-            android:layout_width="wrap_content" />
+            android:layout_width="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:layout_below="@+id/circularprogressbar1"/>
+
+        <Button
+            android:text="Q"
+            android:id="@+id/prolongButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:onClick="prolongButtonOnClick"
+            android:layout_below="@+id/stopParkingButton"
+            android:layout_centerHorizontal="true"
+            />
+
     </LinearLayout>
+
+
+
+<!--
     <Button
         android:text="Q"
         android:id="@+id/prolongButton"
@@ -41,22 +92,10 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:onClick="prolongButtonOnClick"
-        android:layout_below="@+id/parkingButtonsLinearLayout"
-        android:layout_centerHorizontal="true" />
+        android:layout_below="@+id/stopParkingButton"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="38dp" />
+-->
 
-    <com.lylc.widget.circularprogressbar.CircularProgressBar
-        android:id="@+id/circularprogressbar1"
-        style="@style/Widget.ProgressBar.CircularProgressBar"
-        android:layout_width="140dip"
-        android:layout_height="140dip"
-        android:indeterminate="false"
-        circular:cpb_title="112 мин"
-        circular:cpb_subtitle="осталось"
-        circular:cpb_progressColor="@color/colorPrimary"
-        circular:cpb_titleColor="@color/colorPrimary"
-        circular:cpb_subtitleColor="@color/colorPrimary"
-        android:progress="56"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

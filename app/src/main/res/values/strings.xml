@@ -76,4 +76,7 @@
     <string name="incomingSmsFailed">Не обнаружено входящее СМС</string>
     <string name="stopParkingButtonText">Прекратить досрочно</string>
     <string name="prolongButtonText">Продлить</string>
+    <string name="outgoingSmsWaiting">Ожидаем отправки смс</string>
+    <string name="incomingSmsWaiting">Ожидаем получения смс</string>
+    <string name="smsOrderPaid">Заказ оплачен</string>
 </resources>

@@ -58,7 +58,7 @@
             android:textSize="20sp"
             android:layout_height="50dp"
             android:layout_weight="1"
-            android:background="@drawable/button_shape"
+            android:background="@drawable/button_customize"
             android:shadowColor="#A8A8A8"
             android:shadowDx="0"
             android:shadowDy="0"

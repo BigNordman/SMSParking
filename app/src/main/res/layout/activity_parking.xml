@@ -68,7 +68,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_below="@+id/circularprogressbar1"/>
-
+<!--
         <Button
             android:text="Q"
             android:id="@+id/prolongButton"
@@ -79,23 +79,10 @@
             android:layout_below="@+id/stopParkingButton"
             android:layout_centerHorizontal="true"
             />
-
+-->
     </LinearLayout>
 
 
-
-<!--
-    <Button
-        android:text="Q"
-        android:id="@+id/prolongButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:onClick="prolongButtonOnClick"
-        android:layout_below="@+id/stopParkingButton"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="38dp" />
--->
 
 
 </RelativeLayout>

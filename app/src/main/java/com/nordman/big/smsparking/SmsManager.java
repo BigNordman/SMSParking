@@ -10,6 +10,7 @@ import android.provider.Telephony;
 import android.util.Log;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * Created by s_vershinin on 15.01.2016.
@@ -17,6 +18,13 @@ import java.util.Date;
 public class SmsManager {
     public static final long MILLIS_IN_HOUR = 3600000;
     private static final long MILLIS_IN_MINUTE = 60000;
+
+    public static final int STATUS_INITIAL = 1;
+    public static final int STATUS_WAITING_OUT = 2;
+    public static final int STATUS_WAITING_IN = 3;
+    public static final int STATUS_SMS_SENT = 4;
+    public static final int STATUS_SMS_NOT_SENT = 5;
+    int appStatus = STATUS_INITIAL;
 
     Context context;
     Date sendDate;
@@ -110,7 +118,7 @@ public class SmsManager {
         ContentResolver cr = context.getContentResolver();
 
         Cursor c = cr.query(Telephony.Sms.Inbox.CONTENT_URI, // Official CONTENT_URI from docs
-                new String[] { Telephony.Sms.Inbox.DATE, Telephony.Sms.Inbox.ADDRESS, Telephony.Sms.Inbox.BODY }, // Select body text
+                new String[]{Telephony.Sms.Inbox.DATE, Telephony.Sms.Inbox.ADDRESS, Telephony.Sms.Inbox.BODY}, // Select body text
                 Telephony.Sms.Inbox.ADDRESS + " = '" + fromWhom + "'",
                 null,
                 Telephony.Sms.Inbox.DEFAULT_SORT_ORDER); // Default sort order
@@ -165,5 +173,21 @@ public class SmsManager {
         context.startActivity(intent);
     }
 
+    public void saveState() {
+        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor ed = prefs.edit();
+        ed.putInt("status", appStatus);
+        ed.putLong("sendDate", sendDate!=null ? sendDate.getTime() : 0);
+        ed.putString("sms", sms);
+        ed.apply();
+    }
+
+    public void restoreState() {
+        SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
+        appStatus = prefs.getInt("status", STATUS_INITIAL);
+        sendDate = new Date(prefs.getLong("sendDate",0));
+        sms = prefs.getString("sms","");
+        if (sms.equals("")) updateSms();
+    }
 }
 

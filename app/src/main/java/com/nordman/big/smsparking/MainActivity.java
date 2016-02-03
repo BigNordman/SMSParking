@@ -32,12 +32,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 5;
 
     public static final int MAX_TICK_WAITING = 60;
-    public static final int STATUS_INITIAL = 1;
-    public static final int STATUS_WAITING_OUT = 2;
-    public static final int STATUS_WAITING_IN = 3;
-    public static final int STATUS_SMS_SENT = 4;
-    public static final int STATUS_SMS_NOT_SENT = 5;
-    int appStatus = STATUS_INITIAL;
 
     GoogleApiClient mGoogleApiClient;
     LocationRequest mLocationRequest;
@@ -86,11 +80,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             tick.cancel();
             tick = null;
         }
+        smsMgr.saveState();
     }
 
     @Override
     protected void onResume() {
         Log.d("LOG", "onResume...");
+        smsMgr.restoreState();
 
         if (smsMgr.parkingActive()){
             Log.d("LOG", "smsMgr.parkingActive...");
@@ -176,31 +172,31 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (smsMgr.smsComplete()) this.findViewById(R.id.payButton).setEnabled(true);
         else this.findViewById(R.id.payButton).setEnabled(false);
 
-        switch (appStatus) {
-            case STATUS_INITIAL:
+        switch (smsMgr.appStatus) {
+            case SmsManager.STATUS_INITIAL:
                 findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(sendMessage);
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
                 break;
-            case STATUS_WAITING_OUT:
+            case SmsManager.STATUS_WAITING_OUT:
                 Log.d("LOG", "waiting outgoing sms...");
                 findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.outgoingSmsWaiting));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
                 break;
-            case STATUS_WAITING_IN:
+            case SmsManager.STATUS_WAITING_IN:
                 Log.d("LOG", "waiting incoming sms...");
                 findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.incomingSmsWaiting));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
                 break;
-            case STATUS_SMS_SENT:
+            case SmsManager.STATUS_SMS_SENT:
                 Log.d("LOG", "sms was sent...");
                 findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsWaiting));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.BLACK);
                 break;
-            case STATUS_SMS_NOT_SENT:
+            case SmsManager.STATUS_SMS_NOT_SENT:
                 Log.d("LOG", "sms wasn't sent...");
                 findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsFailed));
@@ -251,7 +247,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         if (smsMgr.currentZone!=null) outState.putInt("currentZoneNumber", smsMgr.currentZone.getZoneNumber());
         outState.putString("hours", smsMgr.hours);
         if (smsMgr.sendDate !=null) outState.putLong("sendDate", smsMgr.sendDate.getTime());
-        outState.putInt("status", appStatus);
+        outState.putInt("status", smsMgr.appStatus);
 
         Log.d("LOG", "onSaveInstanceState");
     }
@@ -263,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         smsMgr.currentZone = geoMgr.getParkZone(savedInstanceState.getInt("currentZoneNumber"));
         smsMgr.hours = savedInstanceState.getString("hours");
         smsMgr.sendDate = new Date(savedInstanceState.getLong("sendDate"));
-        appStatus = savedInstanceState.getInt("status");
+        smsMgr.appStatus = savedInstanceState.getInt("status");
 
         Log.d("LOG", "onRestoreInstanceState");
     }
@@ -289,7 +285,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         it.putExtra("sms_body", smsMgr.sms);
         startActivity(it);
         smsMgr.sendDate = new Date();
-        appStatus = STATUS_WAITING_OUT;
+        smsMgr.appStatus = SmsManager.STATUS_WAITING_OUT;
         tickWaiting = 0;
     }
 
@@ -305,23 +301,23 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             // обрабатываем сообщение таймера
             Log.d("LOG", "***tick! ");
 
-            if(appStatus==STATUS_WAITING_OUT){
+            if(smsMgr.appStatus==SmsManager.STATUS_WAITING_OUT){
                 // ждем исходящее смс
                 Log.d("LOG", "***ждем исходящее смс");
                 tickWaiting++;
 
                 if (smsMgr.IsSent(getResources().getString(R.string.smsNumber))){
                     // обнаружили, что смс отправлена. Меняем статус на ожидание входящего смс
-                    appStatus=STATUS_WAITING_IN;
+                    smsMgr.appStatus=SmsManager.STATUS_WAITING_IN;
                     tickWaiting = 0;
                 }
                 if (tickWaiting==MAX_TICK_WAITING){
                     // время ожидания исходящего смс истекло
-                    appStatus=STATUS_SMS_NOT_SENT;
+                    smsMgr.appStatus=SmsManager.STATUS_SMS_NOT_SENT;
                 }
             }
 
-            if(appStatus==STATUS_WAITING_IN){
+            if(smsMgr.appStatus==SmsManager.STATUS_WAITING_IN){
                 // ждем входящее смс
                 Log.d("LOG", "***ждем входящее смс");
                 tickWaiting++;
@@ -335,13 +331,13 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     } else {
                         // если какая-то другая смс - просто выводим ее содержимое
                         sendMessage = smsText;
-                        appStatus = STATUS_INITIAL;
+                        smsMgr.appStatus = SmsManager.STATUS_INITIAL;
                     }
 
                 }
                 if (tickWaiting==MAX_TICK_WAITING){
                     // время ожидания исходящего смс истекло
-                    appStatus=STATUS_SMS_NOT_SENT;
+                    smsMgr.appStatus=SmsManager.STATUS_SMS_NOT_SENT;
                 }
 
             }

@@ -9,13 +9,14 @@ import android.preference.PreferenceManager;
 import android.provider.Telephony;
 import android.util.Log;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.Objects;
 
 /**
  * Created by s_vershinin on 15.01.2016.
  */
-public class SmsManager {
+public class SmsManager implements Serializable{
     public static final long MILLIS_IN_HOUR = 3600000;
     private static final long MILLIS_IN_MINUTE = 60000;
 
@@ -156,6 +157,7 @@ public class SmsManager {
     public void stopParking() {
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
         startParkingDate=null;
+        appStatus = STATUS_INITIAL;
         SharedPreferences.Editor ed = prefs.edit();
         ed.putString("LastParkTime", "0");
         ed.putString("LastHours", hours);
@@ -166,6 +168,7 @@ public class SmsManager {
 
     public  void showParkingScreen() {
         Intent intent = new Intent(context, ParkingActivity.class);
+        //intent.putExtra("smsMgr",this);
         context.startActivity(intent);
     }
 
@@ -179,6 +182,7 @@ public class SmsManager {
         SharedPreferences.Editor ed = prefs.edit();
         ed.putInt("status", appStatus);
         ed.putLong("sendDate", sendDate != null ? sendDate.getTime() : 0);
+        ed.putLong("startParkingDate", startParkingDate != null ? startParkingDate.getTime() : 0);
         ed.putInt("zoneNumber", currentZone != null ? currentZone.getZoneNumber() : 0);
         ed.apply();
     }
@@ -187,8 +191,9 @@ public class SmsManager {
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
         appStatus = prefs.getInt("status", STATUS_INITIAL);
         sendDate = new Date(prefs.getLong("sendDate",0));
-        if (appStatus==STATUS_WAITING_IN || appStatus==STATUS_WAITING_OUT)
-            currentZone = new GeoManager(context).getParkZone(prefs.getInt("zoneNumber", 0));
+        startParkingDate = new Date(prefs.getLong("startParkingDate",0));
+        //if (appStatus==STATUS_WAITING_IN || appStatus==STATUS_WAITING_OUT)
+        currentZone = new GeoManager(context).getParkZone(prefs.getInt("zoneNumber", 0));
     }
 }
 

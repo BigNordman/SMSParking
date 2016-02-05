@@ -340,6 +340,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     // какая-то смс с искомого номера пришла...
                     if (smsText.indexOf(getResources().getString(R.string.smsOrderPaid))==0){
                         // если смс именно с подтверждением оплаты, то меняем интерфейс на "припарковано"
+                        smsMgr.appStatus = SmsManager.STATUS_INITIAL;
                         smsMgr.startParking();
                     } else {
                         // если какая-то другая смс - просто выводим ее содержимое
@@ -362,6 +363,10 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
 
     public void qClick(View view) {
+        smsMgr.sendDate = new Date();
+        smsMgr.startParkingDate = smsMgr.sendDate;
+        smsMgr.appStatus = SmsManager.STATUS_INITIAL;
+        smsMgr.saveState();
         smsMgr.startParking();
     }
 }

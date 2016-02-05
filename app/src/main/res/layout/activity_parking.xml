@@ -21,7 +21,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Зона 203"
+            android:text="Зона"
             android:id="@+id/zoneText"
             android:textSize="@dimen/text_size_large"
             android:layout_alignParentTop="true"
@@ -31,7 +31,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="Время начала 12:33"
+            android:text="Время начала"
             android:id="@+id/beginText"
             android:textSize="@dimen/text_size_large"
             android:textAlignment="center" />
@@ -68,18 +68,18 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_below="@+id/circularprogressbar1"/>
-<!--
+
         <Button
             android:text="Q"
-            android:id="@+id/prolongButton"
+            android:id="@+id/qButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:onClick="prolongButtonOnClick"
+            android:onClick="qButtonOnClick"
             android:layout_below="@+id/stopParkingButton"
             android:layout_centerHorizontal="true"
             />
--->
+
     </LinearLayout>
 
 

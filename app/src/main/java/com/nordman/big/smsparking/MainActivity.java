@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     public static final long UPDATE_INTERVAL_IN_MILLISECONDS = 5000;
     public static final long FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_MILLISECONDS / 5;
 
+    public static final long TICK_INTERVAL = 1000;
     public static final int MAX_TICK_WAITING = 60;
 
     GoogleApiClient mGoogleApiClient;
@@ -38,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     GeoManager geoMgr = new GeoManager(this);
     SmsManager smsMgr = new SmsManager(this);
     Timer tick = null;
-    int tickWaiting = 0;
     String sendMessage = "";
 
     @Override
@@ -63,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
         if (tick==null){
             tick = new Timer();
-            tick.schedule(new UpdateTickTask(), 0, 1000); //тикаем каждую секунду
+            tick.schedule(new UpdateTickTask(), 0, TICK_INTERVAL); //тикаем каждую секунду
         }
 
         super.onStart();
@@ -202,13 +202,20 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.sendSmsFailed));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
                 break;
+            case SmsManager.STATUS_SMS_NOT_RECEIVED:
+                Log.d("LOG", "sms wasn't reseived...");
+                findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
+                ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.incomingSmsFailed));
+                ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
+                break;
         }
-
     }
 
     public void getZoneButtonOnClick(View v) {
         Log.d("LOG", geoMgr.getCoordinates(mGoogleApiClient));
         Toast.makeText(v.getContext(), geoMgr.getCoordinates(mGoogleApiClient), Toast.LENGTH_LONG).show();
+
+        if (smsMgr.appStatus==SmsManager.STATUS_SMS_NOT_SENT) smsMgr.appStatus=SmsManager.STATUS_INITIAL;
 
         smsMgr.currentZone = geoMgr.getParkZone(mGoogleApiClient);
         updateView();
@@ -235,6 +242,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
     @Override
     public boolean onMenuItemClick(MenuItem item) {
         smsMgr.currentZone = geoMgr.getParkZone(item.getItemId());
+
+        if (smsMgr.appStatus==SmsManager.STATUS_SMS_NOT_SENT) smsMgr.appStatus=SmsManager.STATUS_INITIAL;
+
         updateView();
 
         return true;
@@ -266,16 +276,19 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
 
     public void oneHourButtonOnClick(View view) {
         smsMgr.hours = "1";
+        if (smsMgr.appStatus==SmsManager.STATUS_SMS_NOT_SENT) smsMgr.appStatus=SmsManager.STATUS_INITIAL;
         updateView();
     }
 
     public void twoHourButtonOnClick(View view) {
         smsMgr.hours = "2";
+        if (smsMgr.appStatus==SmsManager.STATUS_SMS_NOT_SENT) smsMgr.appStatus=SmsManager.STATUS_INITIAL;
         updateView();
     }
 
     public void threeHourButtonOnClick(View view) {
         smsMgr.hours = "3";
+        if (smsMgr.appStatus==SmsManager.STATUS_SMS_NOT_SENT) smsMgr.appStatus=SmsManager.STATUS_INITIAL;
         updateView();
     }
 
@@ -286,7 +299,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
         startActivity(it);
         smsMgr.sendDate = new Date();
         smsMgr.appStatus = SmsManager.STATUS_WAITING_OUT;
-        tickWaiting = 0;
     }
 
     private class UpdateTickTask extends TimerTask {
@@ -304,14 +316,16 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             if(smsMgr.appStatus==SmsManager.STATUS_WAITING_OUT){
                 // ждем исходящее смс
                 Log.d("LOG", "***ждем исходящее смс");
-                tickWaiting++;
 
                 if (smsMgr.IsSent(getResources().getString(R.string.smsNumber))){
                     // обнаружили, что смс отправлена. Меняем статус на ожидание входящего смс
                     smsMgr.appStatus=SmsManager.STATUS_WAITING_IN;
-                    tickWaiting = 0;
+                    smsMgr.sendDate = new Date();
                 }
-                if (tickWaiting==MAX_TICK_WAITING){
+
+
+
+                if ((int)((new Date().getTime()-smsMgr.sendDate.getTime())/TICK_INTERVAL)>=MAX_TICK_WAITING){
                     // время ожидания исходящего смс истекло
                     smsMgr.appStatus=SmsManager.STATUS_SMS_NOT_SENT;
                 }
@@ -320,7 +334,6 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
             if(smsMgr.appStatus==SmsManager.STATUS_WAITING_IN){
                 // ждем входящее смс
                 Log.d("LOG", "***ждем входящее смс");
-                tickWaiting++;
 
                 String smsText = smsMgr.GetIncomingSms(getResources().getString(R.string.smsNumber));
                 if (smsText!=null){
@@ -335,9 +348,9 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                     }
 
                 }
-                if (tickWaiting==MAX_TICK_WAITING){
+                if ((int)((new Date().getTime()-smsMgr.sendDate.getTime())/TICK_INTERVAL)>=(MAX_TICK_WAITING*5)){
                     // время ожидания исходящего смс истекло
-                    smsMgr.appStatus=SmsManager.STATUS_SMS_NOT_SENT;
+                    smsMgr.appStatus=SmsManager.STATUS_SMS_NOT_RECEIVED;
                 }
 
             }

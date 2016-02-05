@@ -24,6 +24,7 @@ public class SmsManager {
     public static final int STATUS_WAITING_IN = 3;
     public static final int STATUS_SMS_SENT = 4;
     public static final int STATUS_SMS_NOT_SENT = 5;
+    public static final int STATUS_SMS_NOT_RECEIVED = 6;
     int appStatus = STATUS_INITIAL;
 
     Context context;
@@ -177,8 +178,8 @@ public class SmsManager {
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor ed = prefs.edit();
         ed.putInt("status", appStatus);
-        ed.putLong("sendDate", sendDate!=null ? sendDate.getTime() : 0);
-        ed.putString("sms", sms);
+        ed.putLong("sendDate", sendDate != null ? sendDate.getTime() : 0);
+        ed.putInt("zoneNumber", currentZone != null ? currentZone.getZoneNumber() : 0);
         ed.apply();
     }
 
@@ -186,8 +187,8 @@ public class SmsManager {
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
         appStatus = prefs.getInt("status", STATUS_INITIAL);
         sendDate = new Date(prefs.getLong("sendDate",0));
-        sms = prefs.getString("sms","");
-        if (sms.equals("")) updateSms();
+        if (appStatus==STATUS_WAITING_IN || appStatus==STATUS_WAITING_OUT)
+            currentZone = new GeoManager(context).getParkZone(prefs.getInt("zoneNumber", 0));
     }
 }
 

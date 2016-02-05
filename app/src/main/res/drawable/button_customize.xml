@@ -25,7 +25,7 @@
     <item android:state_pressed="true" android:state_focused="false" android:state_enabled="true">
         <shape >
             <corners android:radius="33dp"/>
-            <solid android:color="#3F51B5"/>
+            <solid android:color="#4f67ec"/>
             <padding
                 android:left="0dp"
                 android:top="0dp"

@@ -68,7 +68,7 @@
             android:layout_centerVertical="true"
             android:layout_alignParentEnd="true"
             android:layout_below="@+id/circularprogressbar1"/>
-
+<!--
         <Button
             android:text="Q"
             android:id="@+id/qButton"
@@ -79,7 +79,7 @@
             android:layout_below="@+id/stopParkingButton"
             android:layout_centerHorizontal="true"
             />
-
+-->
     </LinearLayout>
 
 

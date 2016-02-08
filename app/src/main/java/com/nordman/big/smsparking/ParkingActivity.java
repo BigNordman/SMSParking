@@ -53,8 +53,8 @@ public class ParkingActivity extends Activity {
         if (smsMgr.startParkingDate!=null) {
             Log.d("LOG", "smsMgr.startParkingDate = " + smsMgr.startParkingDate);
 
-            DateFormat df = new SimpleDateFormat("hh:mm");
-            ((TextView) this.findViewById(R.id.beginText)).setText(df.format(smsMgr.startParkingDate));
+            DateFormat df = new SimpleDateFormat("kk:mm");
+            ((TextView) this.findViewById(R.id.beginText)).setText("Парковка с " + df.format(smsMgr.startParkingDate));
 
             Log.d("LOG", "smsMgr.startParkingDate formatted = " + df.format(smsMgr.startParkingDate));
         }
@@ -64,6 +64,8 @@ public class ParkingActivity extends Activity {
             if(smsMgr.IsSent(getResources().getString(R.string.smsNumber))) {
                 // смс о досрочном прекращении отослана - возвращаемся на стартовый экран
                 smsMgr.stopParking();
+                smsMgr.appStatus=SmsManager.STATUS_INITIAL;
+                smsMgr.saveState();
                 finish();
             }
         }
@@ -72,9 +74,16 @@ public class ParkingActivity extends Activity {
 
     private void setProgress() {
         CircularProgressBar pb = (CircularProgressBar) findViewById(R.id.circularprogressbar1);
-
-        pb.setProgress(smsMgr.getProgress());
+        int progress = smsMgr.getProgress();
+        pb.setProgress(progress);
         pb.setTitle(String.valueOf(smsMgr.getMinutes()) + " мин");
+
+        if (progress==0) {
+            smsMgr.stopParking();
+            smsMgr.appStatus=SmsManager.STATUS_INITIAL;
+            smsMgr.saveState();
+            finish();
+        }
     }
 
 
@@ -115,6 +124,8 @@ public class ParkingActivity extends Activity {
 
     public void qButtonOnClick(View view) {
         smsMgr.stopParking();
+        smsMgr.appStatus=SmsManager.STATUS_INITIAL;
+        smsMgr.saveState();
         finish();
     }
 

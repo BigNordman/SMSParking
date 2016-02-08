@@ -26,6 +26,7 @@ public class SmsManager implements Serializable{
     public static final int STATUS_SMS_SENT = 4;
     public static final int STATUS_SMS_NOT_SENT = 5;
     public static final int STATUS_SMS_NOT_RECEIVED = 6;
+    public static final int STATUS_PARKING = 7;
     int appStatus = STATUS_INITIAL;
 
     Context context;
@@ -158,6 +159,7 @@ public class SmsManager implements Serializable{
         SharedPreferences prefs= PreferenceManager.getDefaultSharedPreferences(context);
         startParkingDate=null;
         appStatus = STATUS_INITIAL;
+
         SharedPreferences.Editor ed = prefs.edit();
         ed.putString("LastParkTime", "0");
         ed.putString("LastHours", hours);

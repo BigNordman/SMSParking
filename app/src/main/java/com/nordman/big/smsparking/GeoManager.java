@@ -12,7 +12,6 @@ import android.util.Log;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 
-import com.vividsolutions.jts.awt.PointShapeFactory;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Point;
@@ -51,7 +50,7 @@ public class GeoManager {
     public ArrayList<ParkZone> getParkZoneList(){
         ArrayList<ParkZone> result = new ArrayList<ParkZone>();
         ArrayList<Coordinate> coords = null;
-        Polygon polygon = null;
+        Polygon polygon;
         Integer zoneNumber = null;
         String zoneDesc = null;
 
@@ -111,6 +110,8 @@ public class GeoManager {
     public ParkZone getParkZone(GoogleApiClient mGoogleApiClient){
         ArrayList<ParkZone> zones = this.getParkZoneList();
         Point currentPoint = this.getCurrentPoint(mGoogleApiClient);
+
+        if (currentPoint==null) return null;
 
         for(ParkZone zone : zones){
             if (zone.getZonePolygon().contains(currentPoint)){

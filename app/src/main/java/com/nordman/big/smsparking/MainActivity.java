@@ -207,7 +207,7 @@ public class MainActivity extends AppCompatActivity implements GoogleApiClient.C
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);
                 break;
             case SmsManager.STATUS_SMS_NOT_RECEIVED:
-                Log.d("LOG", "sms wasn't reseived...");
+                Log.d("LOG", "sms wasn't received...");
                 findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
                 ((TextView) this.findViewById(R.id.sendMessage)).setText(getResources().getString(R.string.incomingSmsFailed));
                 ((TextView) this.findViewById(R.id.sendMessage)).setTextColor(Color.RED);

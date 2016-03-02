@@ -122,6 +122,8 @@ public class ParkingActivity extends Activity {
         return super.onKeyDown(keyCode, event);
     }
 
+    // обработчик тестовой кнопки:
+    // выход из режима паркинг в режим по умолчанию
     public void qButtonOnClick(View view) {
         smsMgr.stopParking();
         smsMgr.appStatus=SmsManager.STATUS_INITIAL;
